@@ -412,6 +412,15 @@
   .lobHint{ text-align:center; font-size:11px; color:#5a7a64; margin-top:14px; min-height:16px; }
   /* expanded lobby */
   .lobCourseRow{ display:flex; align-items:center; justify-content:center; gap:10px; margin-bottom:14px; }
+  /* host-only format/course pickers inside the lobby room */
+  #lobHostOptions{ margin-bottom:14px; }
+  .lobOptRow{ display:flex; align-items:center; gap:10px; margin-bottom:9px; }
+  .lobOptLabel{ font-size:10px; font-weight:800; letter-spacing:1.5px; color:#3a6a48; width:58px; text-align:right; flex-shrink:0; }
+  .lobOptChoice{ display:flex; flex-wrap:wrap; gap:5px; flex:1; }
+  .lobOptChoice button{ font-family:inherit; font-weight:800; font-size:11px; letter-spacing:.5px; cursor:pointer;
+    color:#3a6a48; background:#eef6f0; border:1.5px solid #d6e8db; padding:6px 11px; border-radius:9px; transition:all .12s; }
+  .lobOptChoice button.on{ color:#fff; background:#3aa55e; border-color:#2e8a4c; }
+  .lobCourseChoice button{ font-size:10px; padding:5px 9px; }
   .lobCourseLabel{ font-size:10px; font-weight:800; letter-spacing:2px; color:#3a6a48; }
   #lobCourseName{ font-weight:800; color:#1d5a2e; }
   .lobCourseBtn{ font-size:10px; font-weight:700; color:#3a7d5a; background:#dff0e4; border:none; padding:4px 9px; border-radius:7px; cursor:pointer; }
@@ -447,11 +456,20 @@
   #mpTurn .mpDot{ width:12px; height:12px; border-radius:50%; box-shadow:0 0 0 2px rgba(255,255,255,.5); }
   #mpClock{ font-variant-numeric:tabular-nums; font-weight:900; }
   #mpClock.low{ color:#ff6a5a; }
-  #mpBoard{ display:flex; gap:6px; }
-  #mpBoard .mpb{ background:rgba(16,28,22,.7); color:#cfe2d4; font-size:11px; font-weight:800; padding:4px 9px;
-    border-radius:8px; display:flex; align-items:center; gap:5px; }
-  #mpBoard .mpb .pd{ width:8px; height:8px; border-radius:50%; }
-  #mpBoard .mpb.act{ outline:2px solid var(--gold,#ffd84d); }
+  #mpBoard{ position:absolute; top:64px; left:10px; z-index:46; display:none; flex-direction:column; gap:5px;
+    pointer-events:none; }
+  #mpBoard.show{ display:flex; }
+  #mpBoard .mpb{ background:rgba(16,28,22,.74); -webkit-backdrop-filter:blur(8px); backdrop-filter:blur(8px);
+    color:#e6f0e9; font-size:12px; font-weight:800; padding:6px 10px; border-radius:9px;
+    display:flex; align-items:center; gap:7px; min-width:104px; box-shadow:0 4px 12px rgba(8,20,12,.35); }
+  #mpBoard .mpb .pd{ width:9px; height:9px; border-radius:50%; flex-shrink:0; }
+  #mpBoard .mpbName{ flex:1; white-space:nowrap; }
+  #mpBoard .mpbScore{ font-weight:900; font-variant-numeric:tabular-nums; }
+  #mpBoard .mpbScore.under{ color:#7ed957; }     /* under par = green */
+  #mpBoard .mpbScore.over{ color:#ff9d6a; }       /* over par = orange */
+  #mpBoard .mpbScore.even{ color:#ffe08a; }       /* even = gold */
+  #mpBoard .mpb.act{ outline:2px solid var(--gold,#ffd84d); box-shadow:0 0 14px rgba(255,216,77,.4); }
+  @media (max-width:700px){ #mpBoard{ top:56px; } #mpBoard .mpb{ font-size:11px; min-width:92px; padding:5px 8px; } }
   #courseScreen{ display:none; }
   /* immersive Sakura backdrop for the course select: a soft, dreamy scene the cards float over */
   #courseScreen::before{
@@ -820,8 +838,8 @@
     <!-- multiplayer turn HUD: whose shot, 25s clock, mini scoreboard -->
     <div id="mpHud">
       <div id="mpTurn"><span class="mpDot"></span><span id="mpTurnName">Player 1</span><span>·</span><span id="mpClock">25</span>s</div>
-      <div id="mpBoard"></div>
     </div>
+    <div id="mpBoard"></div>
     <!-- TEMP TEST BUTTON: jump to the next hole without finishing. Remove this block + its handler later. -->
     <button id="nextHoleBtn" style="position:absolute;top:10px;left:50%;transform:translateX(-50%);z-index:50;
       background:rgba(20,30,24,.82);color:#cfe8d4;border:1px solid #4a8c46;border-radius:8px;
@@ -1452,6 +1470,7 @@
     <!-- ONLINE panel (shown when the toggle is on PLAY ONLINE) -->
     <div id="mpOnline" style="display:none">
       <div id="lobbyPanel">
+        <!-- STEP 1: dead-simple entry — name, then create OR join with a code -->
         <div id="lobCreateRow">
           <div class="lobField">
             <label>YOUR NAME</label>
@@ -1467,16 +1486,41 @@
           </div>
         </div>
 
+        <!-- STEP 2: the lobby room -->
         <div id="lobRoom" style="display:none">
           <div class="lobCodeWrap">
             <span class="lobCodeLabel">LOBBY CODE</span>
             <span id="lobCode">—</span>
             <button class="lobCopy" id="lobCopyBtn">copy</button>
           </div>
-          <div class="lobCourseRow">
+
+          <!-- HOST-ONLY: choose format + course right here -->
+          <div id="lobHostOptions" style="display:none">
+            <div class="lobOptRow">
+              <span class="lobOptLabel">FORMAT</span>
+              <div class="lobOptChoice" id="lobMode">
+                <button class="on" data-mode="ffa">Free for all</button><button data-mode="teams">2v2</button>
+              </div>
+            </div>
+            <div class="lobOptRow">
+              <span class="lobOptLabel">SCORING</span>
+              <div class="lobOptChoice" id="lobScore">
+                <button class="on" data-score="stroke">Stroke</button><button data-score="match">Match</button>
+              </div>
+            </div>
+            <div class="lobOptRow">
+              <span class="lobOptLabel">COURSE</span>
+              <div class="lobOptChoice lobCourseChoice" id="lobCourse">
+                <button class="on" data-course="0">Sakura</button><button data-course="1">Oak Ridge</button><button data-course="2">Volcano</button><button data-course="3">Maple Falls</button><button data-course="4">The Glades</button><button data-course="5">Mirage Dunes</button>
+              </div>
+            </div>
+          </div>
+          <!-- JOINER sees the chosen course read-only -->
+          <div class="lobCourseRow" id="lobCourseReadonly" style="display:none">
             <span class="lobCourseLabel">COURSE</span>
             <span id="lobCourseName">Sakura Links</span>
           </div>
+
           <div class="lobSlotHead"><span id="lobCount">1/4</span> players</div>
           <div id="lobPlayers"></div>
           <div id="lobReadyRow">
@@ -7981,7 +8025,7 @@ function csPetalLoop(ts){
 function showMenu(){
   inMenu = true;
   if(MP){ clearInterval(MP.clockTimer); MP=null; }
-  { const h=$m('mpHud'); if(h) h.style.display='none'; }
+  { const h=$m('mpHud'); if(h) h.style.display='none'; const sb=$m('mpBoard'); if(sb) sb.classList.remove('show'); }
   $m('menuScreen').style.display='flex';
   $m('courseScreen').style.display='none';
   { const ts=$m('tourScreen'); if(ts) ts.style.display='none'; }
@@ -8334,7 +8378,7 @@ function enterWarmup(){
   practiceMode = true;
   rangeMode = true;
   if(MP){ clearInterval(MP.clockTimer); MP=null; }
-  { const h=$m('mpHud'); if(h) h.style.display='none'; }
+  { const h=$m('mpHud'); if(h) h.style.display='none'; const sb=$m('mpBoard'); if(sb) sb.classList.remove('show'); }
   courseIdx = PRACTICE_CI;
   inMenu = false;
   $m('menuScreen').style.display='none';
@@ -8354,7 +8398,7 @@ function enterGame(ci){
   practiceMode = false;
   rangeMode = false;
   if(MP){ clearInterval(MP.clockTimer); MP=null; }
-  { const h=$m('mpHud'); if(h) h.style.display='none'; }
+  { const h=$m('mpHud'); if(h) h.style.display='none'; const sb=$m('mpBoard'); if(sb) sb.classList.remove('show'); }
   courseIdx = ci;
   inMenu = false;
   $m('menuScreen').style.display='none';
@@ -8452,7 +8496,7 @@ function startMultiplayerMatch(){
   practiceMode=false; rangeMode=false; courseIdx=MP_setup.courseIdx; inMenu=false;
   $m('mpScreen').style.display='none';
   { const cn=$m('controlsNote'); if(cn) cn.style.display='flex'; }
-  { const h=$m('mpHud'); if(h) h.style.display='flex'; }
+  { const h=$m('mpHud'); if(h) h.style.display='flex'; const sb=$m('mpBoard'); if(sb) sb.classList.add('show'); }
   { const nb=$m('nextHoleBtn'); if(nb) nb.style.display='none'; }   // no test-skip in MP
   sizeCanvas(); ac(); startMusic();
   mpStartHole(0);
@@ -8634,20 +8678,43 @@ function mpMatchComplete(){
   if(ec) ec.classList.add('show');
 }
 
+/* a player's score RELATIVE TO PAR across the holes played so far (E, +1, -5, …) */
+function mpToPar(p, i){
+  const holes = COURSES[MP.courseIdx].holes;
+  // par for all completed holes (0 .. holeIdx-1)
+  let parDone = 0;
+  for(let h=0; h<MP.holeIdx; h++){ parDone += (holes[h] ? holes[h].par : 4); }
+  // strokes for completed holes = totalPrev; current hole strokes (live for active, stored otherwise)
+  const completedStrokes = p.totalPrev || 0;
+  let curStrokes = 0, curParCounts = false;
+  if(p.holed){ curStrokes = p.holeStrokes; curParCounts = true; }            // finished this hole
+  else if(i===MP.turn){ curStrokes = strokes; curParCounts = strokes>0; }    // playing now
+  else { curStrokes = p.strokes||0; curParCounts = (p.strokes||0)>0; }       // mid-hole, waiting
+  const curPar = curParCounts ? (holes[MP.holeIdx] ? holes[MP.holeIdx].par : 4) : 0;
+  const totalStrokes = completedStrokes + curStrokes;
+  const totalPar = parDone + curPar;
+  return totalStrokes - totalPar;   // negative = under par
+}
+function fmtToPar(d){ return d===0 ? 'E' : (d>0 ? '+'+d : ''+d); }
+
 function mpRenderBoard(){
   const b=$m('mpBoard'); if(!b||!MP) return;
   b.innerHTML = MP.players.map((p,i)=>{
-    let display = '';
+    let display, cls='';
     if(MP.scoreMode==='match'){
-      display = p.matchPoints;
+      display = (p.matchPoints||0) + ' pt';
     } else {
-      const cur = (p.totalPrev||0) + (i===MP.turn?strokes:(p.holed?p.holeStrokes:p.strokes));
-      display = cur;
+      const d = mpToPar(p, i);
+      display = fmtToPar(d);
+      cls = d<0 ? 'under' : (d>0 ? 'over' : 'even');
     }
-    return `<div class="mpb ${i===MP.turn?'act':''}"><span class="pd" style="background:${p.color}"></span>${p.name.slice(0,6)} ${display}${p.holed?'✓':''}</div>`;
+    return `<div class="mpb ${i===MP.turn?'act':''}">
+              <span class="pd" style="background:${p.color}"></span>
+              <span class="mpbName">${p.name.slice(0,7)}</span>
+              <span class="mpbScore ${cls}">${display}${p.holed?' ✓':''}</span>
+            </div>`;
   }).join('');
-  // sync turn HUD clock dot
-  const d=document.querySelector('#mpTurn .mpDot'); if(d) d.style.background = MP.players[MP.turn].color;
+  const d=document.querySelector('#mpTurn .mpDot'); if(d && MP.players[MP.turn]) d.style.background = MP.players[MP.turn].color;
 }
 
 /* fire a shot with an explicit power (for timeout auto-shots) — clean contact, straight */
@@ -8853,11 +8920,12 @@ const NET = (function(){
   function renderLobby(){
     const codeEl = $m('lobCode'); if(codeEl) codeEl.textContent = lobbyState.code || '—';
     const players = lobbyState.players || [];
-    // course name + host-only change button
     const me = players.find(p=>p.seat===NET.me.seat);
     lobbyState.host = !!(me && me.host);
+    // host sees the FORMAT/COURSE pickers; joiners see the chosen course read-only
+    const hostOpts = $m('lobHostOptions'); if(hostOpts) hostOpts.style.display = lobbyState.host ? 'block' : 'none';
+    const roCourse = $m('lobCourseReadonly'); if(roCourse) roCourse.style.display = lobbyState.host ? 'none' : 'flex';
     const cn = $m('lobCourseName'); if(cn) cn.textContent = (COURSES[MP_setup.courseIdx]||{}).name || 'Sakura Links';
-    const cb = $m('lobCourseBtn'); if(cb) cb.style.display = lobbyState.host ? 'inline-block' : 'none';
     const cnt = $m('lobCount'); if(cnt) cnt.textContent = players.length + '/4';
 
     const list = $m('lobPlayers'); if(!list) return;
@@ -8967,7 +9035,7 @@ const NET = (function(){
     lobbyState.open=false;
     $m('mpScreen') && ($m('mpScreen').style.display='none');
     { const cn=$m('controlsNote'); if(cn) cn.style.display='flex'; }
-    { const h=$m('mpHud'); if(h) h.style.display='flex'; }
+    { const h=$m('mpHud'); if(h) h.style.display='flex'; const sb=$m('mpBoard'); if(sb) sb.classList.add('show'); }
     { const nb=$m('nextHoleBtn'); if(nb) nb.style.display='none'; }
     sizeCanvas(); ac(); startMusic();
     mpStartHole(0);
@@ -9075,9 +9143,18 @@ const NET = (function(){
       NET.t.sendChat ? NET.t.sendChat(text) : pushLobbyChat(NET.me.name, text);
       if(NET.mode==='local') pushLobbyChat(NET.me.name, text);   // mock echoes locally
     });
-    // host can cycle the course from the lobby
-    $m('lobCourseBtn') && ($m('lobCourseBtn').onclick = ()=>{
-      MP_setup.courseIdx = (MP_setup.courseIdx + 1) % (COURSES.length-1);  // skip practice
+    // host-only pickers inside the lobby room
+    $m('lobMode') && $m('lobMode').querySelectorAll('button').forEach(b=> b.onclick = ()=>{
+      $m('lobMode').querySelectorAll('button').forEach(x=>x.classList.remove('on')); b.classList.add('on');
+      MP_setup.mode = b.dataset.mode;
+    });
+    $m('lobScore') && $m('lobScore').querySelectorAll('button').forEach(b=> b.onclick = ()=>{
+      $m('lobScore').querySelectorAll('button').forEach(x=>x.classList.remove('on')); b.classList.add('on');
+      MP_setup.scoreMode = b.dataset.score;
+    });
+    $m('lobCourse') && $m('lobCourse').querySelectorAll('button').forEach(b=> b.onclick = ()=>{
+      $m('lobCourse').querySelectorAll('button').forEach(x=>x.classList.remove('on')); b.classList.add('on');
+      MP_setup.courseIdx = +b.dataset.course;
       renderLobby();
     });
   }
