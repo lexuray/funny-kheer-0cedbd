@@ -410,6 +410,16 @@
   #lobWait{ text-align:center; font-size:12px; font-weight:700; color:#6a8a72; margin-bottom:12px; }
   .lobMock{ display:block; margin:12px auto 0; font-size:11px; font-weight:700; color:#3a7d5a; background:transparent;
     border:1px dashed #9cc7a8; padding:7px 12px; border-radius:9px; cursor:pointer; }
+  #lobAddLocal{ border-color:#7cc24a; color:#2e7a3a; }
+  #lobLocalHint{ text-align:center; font-size:10px; color:#6a8a72; margin-top:5px; font-weight:600; }
+  .lobRow.lobLocal{ background:rgba(124,194,74,.12); }
+  .lobLocalName{ flex:1; font-family:inherit; font-weight:700; font-size:13px; color:#1d5a2e; background:#fff;
+    border:1.5px solid #cfe3d4; border-radius:7px; padding:4px 8px; min-width:0; }
+  .lobLocalTag{ font-size:9px; font-weight:900; letter-spacing:1px; color:#2e7a3a; background:#d9f0df;
+    padding:2px 7px; border-radius:99px; flex-shrink:0; }
+  .lobLocalDel{ font-family:inherit; font-weight:900; font-size:12px; color:#c0563a; background:transparent;
+    border:none; cursor:pointer; padding:2px 6px; flex-shrink:0; }
+  .lobLocalDel:hover{ color:#e8623a; }
   .lobHint{ text-align:center; font-size:11px; color:#5a7a64; margin-top:14px; min-height:16px; }
   /* expanded lobby */
   .lobCourseRow{ display:flex; align-items:center; justify-content:center; gap:10px; margin-bottom:14px; }
@@ -455,8 +465,12 @@
     color:#fff; font-weight:900; font-size:15px; letter-spacing:1px; padding:7px 18px; border-radius:99px;
     box-shadow:0 6px 16px rgba(8,20,12,.4); display:flex; align-items:center; gap:10px; }
   #mpTurn .mpDot{ width:12px; height:12px; border-radius:50%; box-shadow:0 0 0 2px rgba(255,255,255,.5); }
-  #mpClock{ font-variant-numeric:tabular-nums; font-weight:900; }
-  #mpClock.low{ color:#ff6a5a; }
+  #mpClock{ font-variant-numeric:tabular-nums; font-weight:900; transition:color .15s; }
+  #mpClock.low{ color:#ffb259; }
+  #mpClock.danger{ color:#ff4a3a; animation:clockPulse .6s ease-in-out infinite; display:inline-block; }
+  @keyframes clockPulse{ 0%,100%{ transform:scale(1); text-shadow:0 0 0 rgba(255,60,40,0); } 50%{ transform:scale(1.35); text-shadow:0 0 14px rgba(255,60,40,.8); } }
+  /* the whole turn banner flashes red in the danger zone */
+  #mpHud.clockDanger #mpTurn{ box-shadow:0 0 0 2px rgba(255,60,40,.6), 0 0 18px rgba(255,60,40,.5); }
   #mpBoard{ position:absolute; top:64px; left:10px; z-index:46; display:none; flex-direction:column; gap:5px;
     pointer-events:none; }
   #mpBoard.show{ display:flex; }
@@ -471,6 +485,39 @@
   #mpBoard .mpbScore.even{ color:#ffe08a; }       /* even = gold */
   #mpBoard .mpb.act{ outline:2px solid var(--gold,#ffd84d); box-shadow:0 0 14px rgba(255,216,77,.4); }
   @media (max-width:700px){ #mpBoard{ top:56px; } #mpBoard .mpb{ font-size:11px; min-width:92px; padding:5px 8px; } }
+  #mpBoard .mpbScore.skin{ color:#ffd84d; font-weight:900; }
+
+  /* ===== SKINS POT (top-right chip during play) ===== */
+  #skinPot{ position:absolute; top:64px; right:12px; z-index:46; display:none; pointer-events:none; }
+  #skinPot.show{ display:block; }
+  #skinPotInner{ position:relative; text-align:center;
+    background:linear-gradient(180deg,#fff3c4,#ffd84d 55%,#f0a52e);
+    border-radius:16px; padding:8px 18px 9px; min-width:96px;
+    box-shadow:0 6px 18px rgba(150,100,10,.4), inset 0 1px 0 rgba(255,255,255,.7), inset 0 -2px 0 rgba(150,90,10,.25);
+    border:1.5px solid rgba(255,255,255,.5); }
+  #skinPotLabel{ font-size:9px; font-weight:900; letter-spacing:2px; color:#7a4e0a; }
+  #skinPotVal{ font-size:30px; font-weight:900; line-height:1; color:#5a3500;
+    text-shadow:0 1px 0 rgba(255,255,255,.5); font-variant-numeric:tabular-nums; }
+  #skinPotCarry{ font-size:8px; font-weight:900; letter-spacing:1.5px; color:#b5491a; margin-top:2px;
+    opacity:0; transition:opacity .2s; }
+  #skinPot.carry #skinPotCarry{ opacity:1; }
+  #skinPot.carry #skinPotInner{ animation:potGrow .6s cubic-bezier(.3,1.5,.5,1); box-shadow:0 0 0 3px rgba(255,107,40,.5), 0 6px 22px rgba(180,70,10,.5); }
+  @keyframes potGrow{ 0%{ transform:scale(1);} 45%{ transform:scale(1.22) rotate(-3deg);} 100%{ transform:scale(1);} }
+  @media (max-width:700px){ #skinPot{ top:56px; right:8px; } #skinPotVal{ font-size:24px; } #skinPotInner{ min-width:80px; padding:6px 12px 7px; } }
+
+  /* ===== SKINS HOLE-RESULT REVEAL (center, dramatic) ===== */
+  #skinReveal{ position:absolute; inset:0; z-index:55; display:none; align-items:center; justify-content:center; pointer-events:none; }
+  #skinReveal.show{ display:flex; }
+  #skinRevealCard{ text-align:center; padding:26px 40px; border-radius:22px;
+    background:linear-gradient(180deg, rgba(20,32,26,.92), rgba(12,22,17,.94));
+    box-shadow:0 20px 60px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.12);
+    border:1.5px solid rgba(255,216,77,.35); transform:scale(.7); opacity:0; }
+  #skinReveal.show #skinRevealCard{ animation:skinPop .5s cubic-bezier(.2,1.5,.4,1) forwards; }
+  @keyframes skinPop{ 0%{ transform:scale(.7); opacity:0;} 60%{ transform:scale(1.08);} 100%{ transform:scale(1); opacity:1;} }
+  #skinRevealIcon{ font-size:54px; line-height:1; filter:drop-shadow(0 4px 10px rgba(255,180,0,.4)); }
+  #skinRevealTitle{ font-size:22px; font-weight:900; letter-spacing:2px; color:#fff; margin-top:8px; text-shadow:0 2px 10px rgba(0,0,0,.4); }
+  #skinRevealSub{ font-size:16px; font-weight:900; color:#ffd84d; margin-top:4px; letter-spacing:1px; }
+  #skinReveal.carry #skinRevealSub{ color:#ff9d6a; }
   #courseScreen{ display:none; }
   /* immersive Sakura backdrop for the course select: a soft, dreamy scene the cards float over */
   #courseScreen::before{
@@ -607,6 +654,14 @@
   }
   /* ===== course-screen action buttons (Stats / Shop) ===== */
   #csButtons{ display:flex; gap:14px; align-items:center; z-index:3; margin-top:6px; position:relative; }
+  /* always-visible back button pinned to the top-left of the course screen */
+  .csTopBack{ position:absolute; top:16px; left:16px; z-index:8; font-family:inherit; font-weight:900;
+    font-size:13px; letter-spacing:.5px; color:#2b6685; cursor:pointer;
+    background:linear-gradient(180deg,#ffffff,#eaf4fb); border:none; border-radius:99px; padding:9px 18px;
+    box-shadow:0 4px 0 rgba(60,110,150,.25), 0 8px 18px rgba(60,110,150,.22); transition:transform .1s; }
+  .csTopBack:hover{ transform:translateY(-1px); }
+  .csTopBack:active{ transform:translateY(3px); box-shadow:0 1px 0 rgba(60,110,150,.25); }
+  @media (max-width:700px){ .csTopBack{ top:10px; left:10px; font-size:12px; padding:8px 14px; } }
   .csBtn{
     display:flex; align-items:center; gap:9px; border:none; cursor:pointer; font-family:inherit;
     font-weight:800; font-size:14px; letter-spacing:.5px; padding:13px 26px; border-radius:14px;
@@ -758,6 +813,30 @@
   .lockX{ position:absolute; inset:0; display:none; align-items:center; justify-content:center; z-index:6; pointer-events:none; }
   .courseCard.locked .lockX{ display:flex; }
   .lockX svg{ width:84px; height:84px; filter:drop-shadow(0 3px 6px rgba(120,0,0,.5)); }
+  /* unlock reveal: the red X shatters and flies off, the card pops and glows */
+  .lockX.lockBreak{ display:flex !important; animation:xBreak .9s cubic-bezier(.5,-0.4,.7,1) forwards; }
+  @keyframes xBreak{
+    0%{ transform:scale(1) rotate(0); opacity:1; }
+    18%{ transform:scale(1.28) rotate(-8deg); opacity:1; }
+    30%{ transform:scale(1.18) rotate(5deg); }
+    100%{ transform:scale(.4) rotate(40deg) translateY(60px); opacity:0; }
+  }
+  .courseCard.unlockPop{ animation:cardUnlock 1.0s ease-out; z-index:8; }
+  @keyframes cardUnlock{
+    0%{ transform:scale(1); filter:saturate(.6) brightness(.96); box-shadow:0 12px 30px rgba(10,40,60,.3); }
+    14%{ transform:translateX(-6px) scale(1.01); }
+    24%{ transform:translateX(6px) scale(1.02); }
+    34%{ transform:translateX(-4px); }
+    44%{ transform:translateX(4px); }
+    52%{ transform:translateX(0) scale(1.06); filter:saturate(1.1) brightness(1.06); box-shadow:0 0 0 3px rgba(126,217,89,.7), 0 0 40px rgba(126,217,89,.7), 0 20px 44px rgba(10,40,60,.4); }
+    100%{ transform:scale(1); filter:saturate(1) brightness(1); box-shadow:0 14px 34px rgba(10,40,60,.34); }
+  }
+  .lockBadge.lockBadgeBreak{ animation:badgePop .5s ease forwards; }
+  @keyframes badgePop{
+    0%{ transform:scale(1); opacity:1; }
+    40%{ transform:scale(1.15); opacity:1; background:#bdf0c4; color:#1d6b3a; }
+    100%{ transform:scale(.6) translateY(14px); opacity:0; }
+  }
   .lockBadge{ font-size:12px; font-weight:900; letter-spacing:1px; color:#7c5a27; background:#ffe9b0; border-radius:999px; padding:5px 13px; }
   /* richer course preview: an SVG mini-map of the real course character */
   .cpArt{ width:100%; height:118px; border-radius:12px; overflow:hidden; display:block;
@@ -772,6 +851,34 @@
   .cpDiffDots i.on.easy{ background:#5bc46a; } .cpDiffDots i.on.med{ background:#f0a818; }
   .cpDiffDots i.on.hard{ background:#e8623a; }
   .cpDiffLabel{ color:#5a6d5c; }
+  /* ===== TOUR COMPLETE CELEBRATION ===== */
+  #tourCelebrate{
+    position:absolute; inset:0; z-index:60; display:none; align-items:center; justify-content:center;
+    overflow:hidden;
+    background:radial-gradient(120% 100% at 50% 30%, #ffe9a8 0%, #ffcf5c 38%, #f5a93c 72%, #d97a1f 100%);
+  }
+  #tourCelebrate.show{ display:flex; animation:tcFade .5s ease; }
+  @keyframes tcFade{ from{opacity:0;} to{opacity:1;} }
+  #tcBox{ position:relative; z-index:3; text-align:center; padding:30px 34px; max-width:min(440px,90vw); }
+  #tcTrophy{ font-size:96px; line-height:1; filter:drop-shadow(0 8px 18px rgba(120,60,0,.45));
+    animation:tcTrophyIn .8s cubic-bezier(.2,1.4,.5,1) both; }
+  @keyframes tcTrophyIn{ 0%{ transform:scale(0) rotate(-30deg); opacity:0; } 60%{ transform:scale(1.2) rotate(8deg); } 100%{ transform:scale(1) rotate(0); opacity:1; } }
+  #tcEyebrow{ margin-top:12px; font-size:13px; font-weight:900; letter-spacing:5px; color:#7a4a10; opacity:0; animation:tcUp .5s ease .3s forwards; }
+  #tcName{ font-size:40px; font-weight:900; letter-spacing:3px; color:#fff; margin:4px 0 2px;
+    text-shadow:0 2px 0 rgba(150,80,0,.4), 0 8px 22px rgba(120,60,0,.4); opacity:0; animation:tcUp .5s ease .42s forwards; }
+  #tcTagline{ font-size:14px; font-weight:700; font-style:italic; color:#8a5414; opacity:0; animation:tcUp .5s ease .54s forwards; }
+  #tcStars{ margin:16px 0 10px; display:flex; gap:14px; justify-content:center; }
+  #tcStars span{ font-size:38px; color:#fff5d0; text-shadow:0 2px 8px rgba(150,90,0,.5); transform:scale(0); display:inline-block; }
+  #tcStars span:nth-child(1){ animation:tcStar .5s cubic-bezier(.2,1.6,.5,1) .7s forwards; }
+  #tcStars span:nth-child(2){ animation:tcStar .5s cubic-bezier(.2,1.6,.5,1) .88s forwards; }
+  #tcStars span:nth-child(3){ animation:tcStar .5s cubic-bezier(.2,1.6,.5,1) 1.06s forwards; }
+  @keyframes tcStar{ 0%{ transform:scale(0) rotate(-40deg);} 70%{ transform:scale(1.3) rotate(10deg);} 100%{ transform:scale(1) rotate(0);} }
+  #tcMsg{ font-size:14px; font-weight:600; color:#6e4410; line-height:1.5; margin-bottom:22px; opacity:0; animation:tcUp .5s ease 1.2s forwards; }
+  #tcContinue{ opacity:0; animation:tcUp .5s ease 1.45s forwards; }
+  @keyframes tcUp{ from{ opacity:0; transform:translateY(14px);} to{ opacity:1; transform:translateY(0);} }
+  #tcConfetti{ position:absolute; inset:0; z-index:1; pointer-events:none; overflow:hidden; }
+  .tcDot{ position:absolute; top:-20px; width:11px; height:14px; border-radius:2px; opacity:.95; animation:tcFall linear forwards; }
+  @keyframes tcFall{ to{ transform:translateY(120vh) rotate(720deg); } }
   #settingsScreen{
     position:absolute; inset:0; z-index:50; display:none;
     background:rgba(20,40,55,.45); -webkit-backdrop-filter:blur(4px); backdrop-filter:blur(4px);
@@ -870,6 +977,22 @@
       <div id="mpTurn"><span class="mpDot"></span><span id="mpTurnName">Player 1</span><span>·</span><span id="mpClock">25</span>s</div>
     </div>
     <div id="mpBoard"></div>
+    <!-- skins pot: shows the current hole's pot value, grows on carryover -->
+    <div id="skinPot">
+      <div id="skinPotInner">
+        <div id="skinPotLabel">SKINS POT</div>
+        <div id="skinPotVal">1</div>
+        <div id="skinPotCarry">CARRYOVER</div>
+      </div>
+    </div>
+    <!-- dramatic hole-result reveal for skins -->
+    <div id="skinReveal">
+      <div id="skinRevealCard">
+        <div id="skinRevealIcon">🏆</div>
+        <div id="skinRevealTitle">BEN WINS THE HOLE</div>
+        <div id="skinRevealSub">+2 skins</div>
+      </div>
+    </div>
     <canvas id="minimap" width="150" height="96"></canvas>
 
     <button id="fsBtn" title="Fullscreen (F)" style="position:absolute;bottom:10px;right:10px;z-index:40;
@@ -1132,6 +1255,7 @@
     </svg>
     <div id="csVignette"></div>
     <canvas id="csPetals"></canvas>
+    <button class="csTopBack" id="csTopBack" aria-label="Back to tours">← BACK</button>
     <h2 id="csHeading">SELECT COURSE</h2>
     <div class="csSub" id="csSubHeading">Choose your links</div>
     <div id="courseCards">
@@ -1473,7 +1597,7 @@
       <div class="mpBlock">
         <div class="mpLabel">SCORING</div>
         <div class="mpChoice" id="mpScore">
-          <button class="on" data-score="stroke">Stroke Play</button><button data-score="match">Match Play</button>
+          <button class="on" data-score="stroke">Stroke Play</button><button data-score="match">Match Play</button><button data-score="skins">Skins</button>
         </div>
       </div>
       <!-- course -->
@@ -1527,7 +1651,7 @@
             <div class="lobOptRow">
               <span class="lobOptLabel">SCORING</span>
               <div class="lobOptChoice" id="lobScore">
-                <button class="on" data-score="stroke">Stroke</button><button data-score="match">Match</button>
+                <button class="on" data-score="stroke">Stroke</button><button data-score="match">Match</button><button data-score="skins">Skins</button>
               </div>
             </div>
             <div class="lobOptRow">
@@ -1560,7 +1684,11 @@
               <button data-e="😂 lol">😂</button>
             </div>
           </div>
-          <button class="lobMock" id="lobAddFriend">＋ Add test friend</button>
+          <div id="lobLocalRow" style="display:none">
+            <button class="lobMock" id="lobAddLocal">＋ Add local player (same device)</button>
+            <div id="lobLocalHint">Local players share this screen and take turns on your device.</div>
+          </div>
+          <button class="lobMock" id="lobAddFriend" style="display:none">＋ Add test friend</button>
         </div>
 
         <div id="lobHint" class="lobHint"></div>
@@ -1598,6 +1726,20 @@
       <div id="storeCoins"><svg class="coinIco" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" fill="#ffd84d" stroke="#e0a83c" stroke-width="1.4"/><path d="M12 7.5l1.3 2.7 3 .4-2.2 2.1.5 3-2.6-1.4-2.6 1.4.5-3-2.2-2.1 3-.4z" fill="#e0a83c"/></svg> <span id="storeCoinVal">0</span> coins</div>
       <div id="storeGrid"></div>
       <button class="menuBtn alt" id="storeBack">← BACK</button>
+    </div>
+  </div>
+
+  <!-- ============== TOUR COMPLETE CELEBRATION ============== -->
+  <div id="tourCelebrate">
+    <div id="tcConfetti"></div>
+    <div id="tcBox">
+      <div id="tcTrophy">🏆</div>
+      <div id="tcEyebrow">TOUR COMPLETE</div>
+      <h2 id="tcName">SUNRISE TOUR</h2>
+      <div id="tcTagline">Every legend tees off here</div>
+      <div id="tcStars"><span>★</span><span>★</span><span>★</span></div>
+      <div id="tcMsg">You birdied every hole on every course. A new tour awaits.</div>
+      <button class="menuBtn" id="tcContinue">CONTINUE →</button>
     </div>
   </div>
 
@@ -2567,13 +2709,13 @@ const HOLES5 = [
 
  /* 3 — Lily Pad · P3 · a long island-ish par 3 over a lagoon to a wide, shallow green
         ringed by water on three sides. Wind matters. Backspin or you skip off the back. */
- {name:'Lily Pad', par:3, windMax:11, tee:{x:200,y:430}, fw:60, pin:{x:640,y:300}, windDir:-0.6,
+ {name:'Lily Pad', par:3, windMax:7, tee:{x:285,y:440}, fw:60, pin:{x:640,y:300}, windDir:-0.6,
   green:{lobes:[{x:640,y:300,r:82},{x:576,y:300,r:56},{x:704,y:300,r:56}], /* wide shallow ribbon */
          slope:{dx:0,dy:-0.5,s:0.26}, flat:{r:30,f:0.46},
          features:[{type:'bowl',x:640,y:300,r:40,h:7},
                    {type:'tier',x:578,y:300,dx:-1,dy:0,h:6,w:16},
                    {type:'tier',x:702,y:300,dx:1,dy:0,h:6,w:16}]},
-  spine:[{x:200,y:430},{x:420,y:360},{x:640,y:302}],
+  spine:[{x:285,y:440},{x:460,y:370},{x:640,y:302}],
   waters:[{x:640,y:300,rx:210,ry:150,rot:0,pond:true}],  /* big surrounding lagoon (green sits on its isle) */
   bunkers:[],
   trees:[{x:240,y:250,r:40,kind:'willow'},{x:300,y:500,r:30,kind:'cypress'},{x:860,y:340,r:36,kind:'willow'},{x:840,y:160,r:28,kind:'cypress'}]},
@@ -3442,6 +3584,28 @@ const SFX = {
           tone(220,.14,'triangle',.20,.10);
           [1568,2093,2637,3136].forEach((f,i)=>tone(f,.22,'sine',.16,.26+i*.06)); }, /* sparkle */
   roundFanfare(){ [392,523,659,784,1047,1319].forEach((f,i)=>tone(f,.22,'triangle',.22,i*.13)); },
+  unlock(){ /* a padlock snapping open: a metallic clunk + click, then a bright rising chime */
+    noise(.06,.22,0,true);                       /* mechanical clunk */
+    tone(180,.08,'square',.18,0,-60);            /* heavy metal snap downward */
+    tone(1200,.04,'square',.10,.05);             /* sharp click of the shackle popping */
+    [659,988,1319].forEach((f,i)=>tone(f,.16,'triangle',.18,.14+i*.07));  /* rising "opened!" chime */
+  },
+  /* ===== SHOT CLOCK suspense ===== a tick that gets higher and harder as time runs out.
+     `urgency` 0..1 (1 = about to expire) raises pitch + volume so the pressure builds. */
+  clockTick(urgency){
+    const u = Math.max(0, Math.min(1, urgency||0));
+    const f = 520 + u*620;                         // pitch climbs as time dies
+    tone(f, .035, 'square', 0.05 + u*0.13);        // dry mechanical tick
+    if(u>0.55) tone(f*0.5, .05, 'sine', 0.05+u*0.08);   // a low thud underneath in the danger zone
+  },
+  clockHeart(urgency){                              // a double-thump heartbeat for the final seconds
+    const u = Math.max(0, Math.min(1, urgency||0));
+    tone(70, .12, 'sine', 0.12+u*0.12, 0, -18);
+    tone(64, .14, 'sine', 0.10+u*0.10, 0.14, -16);
+  },
+  clockExpire(){                                    // buzzer when the clock runs out
+    tone(160,.5,'sawtooth',.22,0,-40); noise(.2,.2);
+  },
   tick(){ tone(900,.03,'square',.05); },
   coin(n){ /* bright ka-ching: two quick ascending dings + a sparkle, scaled a touch by amount */
     const big = (n||0) >= 100;
@@ -4553,17 +4717,22 @@ function predictShot(power){
     const pts=[{x:o.x,y:o.y,z:surfaceHeightVis(o.x,o.y)}];
     let trav=0;
     const dt=1/40;
+    /* match the REAL break: same slope formula as applySlopeAndRim() so the yellow line
+       tracks where the ball actually goes, including hard-breaking and volcano (steeper)
+       greens. A tiny read humility remains so it's not a perfect aimbot, but it no longer
+       drifts off on extreme slope. */
+    const gScale = (THEME()==='volcano' ? SLOPE_G*1.35 : SLOPE_G);
     for(let i=0;i<420;i++){
       const sf=surfaceAt(o.x,o.y);
       const spd=Math.hypot(o.vx,o.vy);
       if(sf==='green' && spd>4){
-        const readQ = Math.max(0.55, 0.92 - trav*0.0011);
         const g=greenGrad(o.x,o.y);
-        let ax=-g.x*SLOPE_G, ay=-g.y*SLOPE_G;
+        let ax=-g.x*gScale, ay=-g.y*gScale;
         const vx=o.vx/spd, vy=o.vy/spd;
         const along = ax*vx + ay*vy;
         const lx = ax - along*vx, ly = ay - along*vy;
-        const m=1 + 0.9*Math.max(0, 1 - spd/240);
+        const m = 1 + 0.9*Math.max(0, 1 - spd/240);   /* same late-break amplification as the real roll */
+        const readQ = 0.97;                            /* near-exact read; was 0.55–0.92 (too weak on breaks) */
         o.vx += (along*vx + lx*m)*readQ*dt;
         o.vy += (along*vy + ly*m)*readQ*dt;
       }
@@ -6724,7 +6893,7 @@ function fireShot(){
   /* MULTIPLAYER: record this shot's exact launch so it can be broadcast and replayed on
      other clients as a real animated flight (spectating), with the resting spot sent as an
      authoritative correction. Captured post-grade so it's the actual resolved shot. */
-  if(MP && MP.online && MP.players[MP.turn] && MP.players[MP.turn].seat===MP.mySeat){
+  if(MP && MP.online && MP.players[MP.turn] && (MP.mySeats ? MP.mySeats.has(MP.players[MP.turn].seat) : MP.players[MP.turn].seat===MP.mySeat)){
     MP._pendingShot = {
       from:{ x:lastSafe.x, y:lastSafe.y },
       vx:L.vx, vy:L.vy, vz:L.vz, air:L.air,
@@ -7514,21 +7683,41 @@ function holed(){
     }
     const last = holeIdx === CH().length-1;
     if(qualified) roundDiffs[holeIdx] = diff;
+    /* snapshot which courses were unlocked AND which tours were complete BEFORE recording
+       this hole, so on a course completion we can detect a newly-unlocked card AND whether
+       this finishes an entire tour (which earns a celebration screen). */
+    const wasUnlocked = [];
+    for(let ci=0; ci<COURSES.length-1; ci++) wasUnlocked[ci] = courseUnlocked(ci);
+    const wasTourDone = [];
+    for(let ti=0; ti<TOURS.length; ti++) wasTourDone[ti] = tourComplete(ti);
+    window._unlockReveal = null;
+    window._tourCelebrate = null;
+    if(qualified){
+      stats.holesDone = stats.holesDone||[0,0,0,0];
+      stats.holesDone[courseIdx] = Math.max(stats.holesDone[courseIdx]||0, holeIdx+1);
+    }
+    if(qualified && last){
+      for(let ci=0; ci<COURSES.length-1; ci++){
+        if(!wasUnlocked[ci] && courseUnlocked(ci)){ window._unlockReveal = ci; break; }
+      }
+      /* did this round just COMPLETE a whole tour? */
+      for(let ti=0; ti<TOURS.length; ti++){
+        if(!wasTourDone[ti] && tourComplete(ti)){ window._tourCelebrate = ti; break; }
+      }
+    }
     document.getElementById('endTitle').textContent =
       qualified && last ? 'ROUND COMPLETE!' : title;
     document.getElementById('endSub').textContent =
       qualified
-        ? (last ? `You conquered all 9 holes!` : `${strokes} stroke${strokes===1?'':'s'} on a Par ${PAR} — hole ${holeIdx+2} unlocked`)
+        ? (last ? (window._tourCelebrate!=null ? `Tour complete! Every hole birdied 🏆` : (window._unlockReveal!=null ? `All 9 birdied! A new course is unlocking…` : `You birdied all 9 holes!`)) : `${strokes} stroke${strokes===1?'':'s'} on a Par ${PAR} — hole ${holeIdx+2} unlocked`)
         : `${strokes} on a Par ${PAR} — birdie or better to advance. Run it back!`;
     renderScorecard();
     const total = roundDiffs.reduce((a,b)=>a+(b??0),0);
     document.getElementById('roundVal').textContent = fmtScore(roundDiffs.some(d=>d!==undefined)?total:null);
     if(qualified){
-      /* track furthest hole reached per course (progress) + overall play stats */
-      stats.holesDone = stats.holesDone||[0,0,0,0];
-      stats.holesDone[courseIdx] = Math.max(stats.holesDone[courseIdx]||0, holeIdx+1);
       stats.totalHoles = (stats.totalHoles||0) + 1;
       stats.totalStrokes = (stats.totalStrokes||0) + strokes;
+      saveProgress();
     }
     if(qualified && last){
       if(stats.bestRound===null || total<stats.bestRound) stats.bestRound=total;
@@ -7557,8 +7746,8 @@ function holed(){
     document.getElementById('birdieStreakVal').textContent = stats.bestBirdieStreak;
     document.getElementById('streakBestVal').textContent = stats.bestStreak;
     const btn = document.getElementById('againBtn');
-    btn.textContent = qualified ? (last ? 'New round 🏆' : 'Next hole ⛳') : 'Retry hole 🔁';
-    btn.dataset.action = qualified ? (last ? 'newround' : 'next') : 'retry';
+    btn.textContent = qualified ? (last ? 'Course select 🏆' : 'Next hole ⛳') : 'Retry hole 🔁';
+    btn.dataset.action = qualified ? (last ? 'courseselect' : 'next') : 'retry';
     document.getElementById('cardEyebrow').textContent = 'HOLE '+(holeIdx+1)+' · PAR '+PAR;
     /* next hole preview: number, par, distance */
     const nr = document.getElementById('nextHoleRow');
@@ -8035,6 +8224,22 @@ document.getElementById('againBtn').addEventListener('click', function(){
   const a = this.dataset.action || 'retry';
   if(a==='mpdone'){ document.getElementById('endCard').classList.remove('show'); goToMenu(); return; }
   if(a==='next') startHole(holeIdx+1);
+  else if(a==='courseselect'){
+    /* round complete: clear the round, hide the card. If a whole TOUR just finished, show
+       the celebration screen first; otherwise go straight to course select (which plays the
+       single-course unlock reveal). */
+    roundDiffs=[]; roundHoleDiffs=[]; birdieStreak=0;
+    document.getElementById('endCard').classList.remove('show');
+    { const cn=document.getElementById('controlsNote'); if(cn) cn.style.display='none'; }
+    inMenu = true;
+    if(window._tourCelebrate!=null){
+      const ti = window._tourCelebrate; window._tourCelebrate = null;
+      showTourCelebration(ti);
+    } else {
+      if(window._unlockReveal!=null){ const ut=tourOfCourse(window._unlockReveal); if(ut>=0) tourIdx=ut; }
+      showCourses();
+    }
+  }
   else if(a==='newround'){ roundDiffs=[]; roundHoleDiffs=[]; birdieStreak=0; startHole(0); }
   else if(a==='practice') startHole(0, true);
   else startHole(holeIdx, true);
@@ -8125,7 +8330,7 @@ function csPetalLoop(ts){
 function showMenu(){
   inMenu = true;
   if(MP){ clearInterval(MP.clockTimer); MP=null; }
-  { const h=$m('mpHud'); if(h) h.style.display='none'; const sb=$m('mpBoard'); if(sb) sb.classList.remove('show'); }
+  { const h=$m('mpHud'); if(h) h.style.display='none'; const sb=$m('mpBoard'); if(sb) sb.classList.remove('show'); const sp=$m('skinPot'); if(sp) sp.classList.remove('show'); }
   $m('menuScreen').style.display='flex';
   $m('courseScreen').style.display='none';
   { const ts=$m('tourScreen'); if(ts) ts.style.display='none'; }
@@ -8423,6 +8628,43 @@ function enterTour(ti){
   showCourses();
 }
 
+/* full-screen celebration when a player completes an entire tour (every hole on every
+   course birdied). Trophy, stars, confetti, fanfare; Continue → course select where the
+   newly unlocked next tour does its unlock reveal. */
+function showTourCelebration(ti){
+  const t = TOURS[ti]; if(!t) return;
+  $m('tcName').textContent = (t.name||'TOUR').toUpperCase();
+  $m('tcTagline').textContent = t.tagline || '';
+  const isLastTour = ti >= TOURS.length-1;
+  $m('tcMsg').textContent = isLastTour
+    ? 'You birdied every hole on every course in the game. You are a Birdie Blitz legend.'
+    : 'You birdied every hole on every course. The next tour is now unlocked.';
+  $m('tcContinue').textContent = isLastTour ? 'FINISH 🏆' : 'CONTINUE →';
+  // confetti
+  const cc = $m('tcConfetti'); if(cc){
+    cc.innerHTML='';
+    const colors=['#fff','#7ed957','#4aa3ff','#ff6b6b','#ffd84d','#b06bff'];
+    for(let i=0;i<70;i++){
+      const d=document.createElement('div'); d.className='tcDot';
+      d.style.left=(Math.random()*100)+'%';
+      d.style.background=colors[i%colors.length];
+      d.style.animationDuration=(2.2+Math.random()*2.4)+'s';
+      d.style.animationDelay=(Math.random()*1.2)+'s';
+      d.style.width=(7+Math.random()*7)+'px'; d.style.height=(9+Math.random()*9)+'px';
+      cc.appendChild(d);
+    }
+  }
+  inMenu = true;
+  $m('menuScreen').style.display='none';
+  $m('courseScreen').style.display='none';
+  { const ts=$m('tourScreen'); if(ts) ts.style.display='none'; }
+  { const mp=$m('mpScreen'); if(mp) mp.style.display='none'; }
+  { const cn=$m('controlsNote'); if(cn) cn.style.display='none'; }
+  $m('tourCelebrate').classList.add('show');
+  ac(); try{ SFX.roundFanfare && SFX.roundFanfare(); }catch(e){}
+  setTimeout(()=>{ try{ SFX.fanfare && SFX.fanfare(); }catch(e){} }, 700);
+}
+
 function showCourses(){
   $m('menuScreen').style.display='none';
   $m('tourScreen').style.display='none';
@@ -8476,6 +8718,42 @@ function showCourses(){
     }
     if(xEl) xEl.innerHTML = open ? '' : X;
   }
+
+  /* ===== NEW-COURSE UNLOCK REVEAL =====
+     If a course just unlocked, momentarily show it still locked (X + lock badge),
+     then break the lock off with a shake + sound so the player sees it open. */
+  if(window._unlockReveal!=null && tourCourses.includes(window._unlockReveal)){
+    const ci = window._unlockReveal; window._unlockReveal = null;
+    const card = $m('course'+(ci+1));
+    const xEl  = $m('course'+(ci+1)+'X');
+    const lockEl = $m('course'+(ci+1)+'Lock');
+    const playBtn = $m('course'+(ci+1)+'Play');
+    if(card && xEl){
+      // 1. put the card back into its locked look to start
+      card.classList.add('locked');
+      xEl.innerHTML = X;
+      if(lockEl){ lockEl.style.display=''; lockEl.textContent='🔒 UNLOCKING…'; }
+      if(playBtn) playBtn.style.display='none';
+      // 2. after a beat, break the lock off
+      setTimeout(()=>{
+        try{ SFX.unlock && SFX.unlock(); }catch(e){}
+        xEl.classList.add('lockBreak');            // X shatters + flies off (CSS)
+        card.classList.add('unlockPop');           // card pops/glows
+        if(lockEl) lockEl.classList.add('lockBadgeBreak');
+        // 3. once the break finishes, clear to the normal unlocked state
+        setTimeout(()=>{
+          card.classList.remove('locked','unlockPop');
+          xEl.classList.remove('lockBreak'); xEl.innerHTML='';
+          if(lockEl){ lockEl.classList.remove('lockBadgeBreak'); lockEl.style.display='none'; }
+          if(playBtn) playBtn.style.display='';
+          try{ SFX.roundFanfare && SFX.roundFanfare(); }catch(e){}
+        }, 1100);
+      }, 650);
+      // make sure the newly unlocked card is scrolled into view
+      try{ card.scrollIntoView({behavior:'smooth', block:'center'}); }catch(e){}
+    }
+  }
+
   inMenu = true;
   if(!petalRAF) petalRAF = requestAnimationFrame(petalLoop);
 }
@@ -8483,7 +8761,7 @@ function enterWarmup(){
   practiceMode = true;
   rangeMode = true;
   if(MP){ clearInterval(MP.clockTimer); MP=null; }
-  { const h=$m('mpHud'); if(h) h.style.display='none'; const sb=$m('mpBoard'); if(sb) sb.classList.remove('show'); }
+  { const h=$m('mpHud'); if(h) h.style.display='none'; const sb=$m('mpBoard'); if(sb) sb.classList.remove('show'); const sp=$m('skinPot'); if(sp) sp.classList.remove('show'); }
   courseIdx = PRACTICE_CI;
   inMenu = false;
   $m('menuScreen').style.display='none';
@@ -8503,7 +8781,7 @@ function enterGame(ci){
   practiceMode = false;
   rangeMode = false;
   if(MP){ clearInterval(MP.clockTimer); MP=null; }
-  { const h=$m('mpHud'); if(h) h.style.display='none'; const sb=$m('mpBoard'); if(sb) sb.classList.remove('show'); }
+  { const h=$m('mpHud'); if(h) h.style.display='none'; const sb=$m('mpBoard'); if(sb) sb.classList.remove('show'); const sp=$m('skinPot'); if(sp) sp.classList.remove('show'); }
   courseIdx = ci;
   inMenu = false;
   $m('menuScreen').style.display='none';
@@ -8580,10 +8858,11 @@ function startMultiplayerMatch(){
       team: teams ? (MP_setup.teams[i] ?? (i%2)) : null,
       color: MP_COLORS[i],
       ball:null, strokes:0, holed:false, total:0, holeStrokes:0, totalPrev:0,
-      matchPoints:0  // for match play: points won on holes
+      matchPoints:0,  // for match play: points won on holes
+      skins:0         // for skins: skins won
     });
   }
-  MP = { on:true, mode:MP_setup.mode, scoreMode:MP_setup.scoreMode, courseIdx:MP_setup.courseIdx, players, turn:0, holeIdx:0, deadline:0, clockTimer:null };
+  MP = { on:true, mode:MP_setup.mode, scoreMode:MP_setup.scoreMode, courseIdx:MP_setup.courseIdx, players, turn:0, holeIdx:0, deadline:0, clockTimer:null, skinPot:1 };
   practiceMode=false; rangeMode=false; courseIdx=MP_setup.courseIdx; inMenu=false;
   $m('mpScreen').style.display='none';
   { const cn=$m('controlsNote'); if(cn) cn.style.display='flex'; }
@@ -8630,7 +8909,7 @@ function mpLoadPlayer(idx){
   /* ONLINE: only the player whose seat this is may control. For everyone else the seat is
      driven by network shot events, so lock input and don't run the local shot clock. */
   if(MP.online){
-    const mine = (p.seat === MP.mySeat);
+    const mine = MP.mySeats ? MP.mySeats.has(p.seat) : (p.seat === MP.mySeat);
     MP._inputLocked = !mine;
     if(mine){
       mpArmClock();
@@ -8663,13 +8942,34 @@ function mpShowTurn(){
 function mpArmClock(){
   clearInterval(MP.clockTimer);
   MP.deadline = Date.now()+MP_SHOT_MS;
-  { const c=$m('mpClock'); if(c){ c.textContent = Math.ceil(MP_SHOT_MS/1000); c.classList.remove('low'); } }  // reset display at once
+  MP._lastTickSec = null;                 // so we play one sound per whole second
+  { const c=$m('mpClock'); if(c){ c.textContent = Math.ceil(MP_SHOT_MS/1000); c.classList.remove('low','danger'); } }  // reset display at once
   MP.clockTimer = setInterval(()=>{
     const left = Math.max(0, MP.deadline - Date.now());
     const s = Math.ceil(left/1000);
-    const c = $m('mpClock'); if(c){ c.textContent = s; c.classList.toggle('low', s<=5); }
+    const total = MP_SHOT_MS/1000;
+    const urgency = 1 - (left/MP_SHOT_MS);          // 0 at start → 1 at expiry
+    const c = $m('mpClock');
+    if(c){
+      c.textContent = s;
+      c.classList.toggle('low', s<=8 && s>5);
+      c.classList.toggle('danger', s<=5);
+      { const hud=$m('mpHud'); if(hud) hud.classList.toggle('clockDanger', s<=5); }
+    }
+    // one audio cue per whole second as the clock ticks down — only in the last ~10s so it
+    // builds suspense without being annoying all turn
+    if(s !== MP._lastTickSec){
+      MP._lastTickSec = s;
+      if(s<=10 && s>0){
+        try{
+          if(s<=5){ SFX.clockHeart && SFX.clockHeart((6-s)/5); }   // heartbeat, intensifying
+          else    { SFX.clockTick  && SFX.clockTick((10-s)/10); }  // accelerating tick
+        }catch(e){}
+      }
+    }
     if(left<=0){
       clearInterval(MP.clockTimer);
+      try{ SFX.clockExpire && SFX.clockExpire(); }catch(e){}
       mpAutoShot();
     }
   }, 100);
@@ -8689,6 +8989,7 @@ function mpAutoShot(){
 /* called from finishShot/holed when the active player's ball comes to rest in MP */
 function mpAfterShot(wasHoled){
   clearInterval(MP.clockTimer);
+  { const hud=$m('mpHud'); if(hud) hud.classList.remove('clockDanger'); const c=$m('mpClock'); if(c) c.classList.remove('low','danger'); }
   const p = MP.players[MP.turn];
   p.ball = ball;                        // store updated ball
   p.strokes = strokes;
@@ -8698,7 +8999,7 @@ function mpAfterShot(wasHoled){
 
   /* ONLINE: if this was MY seat's shot, broadcast the resolved result. The turn-advance
      then happens the same way locally; remote peers apply the result and advance in step. */
-  if(MP.online && typeof MP_broadcastResolvedShot==='function' && p.seat===MP.mySeat){
+  if(MP.online && typeof MP_broadcastResolvedShot==='function' && (MP.mySeats ? MP.mySeats.has(p.seat) : p.seat===MP.mySeat)){
     MP_broadcastResolvedShot(p.seat, ball, strokes, wasHoled);
   }
 
@@ -8729,7 +9030,29 @@ function mpHoleComplete(){
       MP.players.forEach(p=>{ if(p.holeStrokes===best) p.matchPoints++; });
     }
   }
+  // SKINS: lowest score wins the pot; a tie carries it to the next hole (pot grows)
+  if(MP.scoreMode==='skins'){
+    const best = Math.min(...MP.players.map(p=>p.holeStrokes));
+    const winners = MP.players.filter(p=>p.holeStrokes===best);
+    const pot = MP.skinPot||1;
+    if(winners.length===1){
+      winners[0].skins += pot;
+      MP._lastSkin = { result:'won', winner:winners[0], pot, hole:MP.holeIdx };
+      MP.skinPot = 1;                         // reset pot after a clean win
+    } else {
+      MP._lastSkin = { result:'carry', pot, nextPot:pot+1, hole:MP.holeIdx };
+      MP.skinPot = pot + 1;                   // tie: carry over, pot grows
+    }
+    showSkinResult(MP._lastSkin);
+    mpRenderBoard();
+  }
   if(MP.holeIdx >= 8){ return mpMatchComplete(); }
+  if(MP.scoreMode==='skins'){
+    // give the skins reveal a moment to play before the next hole
+    showBanner('Hole '+(MP.holeIdx+1)+' done!', '#7ed957');
+    setTimeout(()=>mpStartHole(MP.holeIdx+1), 2200);
+    return;
+  }
   showBanner('Hole '+(MP.holeIdx+1)+' done!', '#7ed957');
   setTimeout(()=>mpStartHole(MP.holeIdx+1), 900);
 }
@@ -8737,7 +9060,14 @@ function mpHoleComplete(){
 function mpMatchComplete(){
   clearInterval(MP.clockTimer);
   let html='', title='';
-  if(MP.scoreMode==='match'){
+  if(MP.scoreMode==='skins'){
+    const sorted = MP.players.slice().sort((x,y)=>(y.skins||0)-(x.skins||0));
+    const top = sorted[0].skins||0;
+    const champs = sorted.filter(p=>(p.skins||0)===top);
+    title = champs.length>1 ? 'Skins tied!' : (sorted[0].name+' takes the skins!');
+    html = sorted.map(p=>`${p.name} — ${p.skins||0} ${(p.skins||0)===1?'skin':'skins'}`).join('   ');
+    if((MP.skinPot||1)>1) html += `   ·   ${MP.skinPot} skins left on the table!`;
+  } else if(MP.scoreMode==='match'){
     if(MP.mode==='teams'){
       const teamA = MP.players.filter(p=>p.team===0).reduce((sum,p)=>sum+p.matchPoints, 0);
       const teamB = MP.players.filter(p=>p.team===1).reduce((sum,p)=>sum+p.matchPoints, 0);
@@ -8794,6 +9124,9 @@ function mpRenderBoard(){
     let display, cls='';
     if(MP.scoreMode==='match'){
       display = (p.matchPoints||0) + ' pt';
+    } else if(MP.scoreMode==='skins'){
+      const s = p.skins||0;
+      display = s + (s===1?' skin':' skins'); cls='skin';
     } else {
       const d = mpToPar(p, i);
       display = fmtToPar(d);
@@ -8806,6 +9139,41 @@ function mpRenderBoard(){
             </div>`;
   }).join('');
   const d=document.querySelector('#mpTurn .mpDot'); if(d && MP.players[MP.turn]) d.style.background = MP.players[MP.turn].color;
+  updateSkinPot();
+}
+
+/* keep the gold pot chip in sync with the current carryover value */
+function updateSkinPot(){
+  const el=$m('skinPot'); if(!el) return;
+  if(!MP || MP.scoreMode!=='skins'){ el.classList.remove('show'); return; }
+  el.classList.add('show');
+  const val=$m('skinPotVal'); if(val) val.textContent = MP.skinPot||1;
+  el.classList.toggle('carry', (MP.skinPot||1) > 1);
+}
+
+/* dramatic center reveal when a hole's skins are decided (won or carried over) */
+function showSkinResult(info){
+  if(!info) return;
+  const rev=$m('skinReveal'), card=$m('skinRevealCard');
+  const icon=$m('skinRevealIcon'), title=$m('skinRevealTitle'), sub=$m('skinRevealSub');
+  if(!rev) return;
+  if(info.result==='won'){
+    rev.classList.remove('carry');
+    if(icon) icon.textContent='🏆';
+    if(title) title.textContent = info.winner.name.toUpperCase()+' WINS THE HOLE';
+    if(sub) sub.textContent = '+'+info.pot+' '+(info.pot===1?'skin':'skins');
+    try{ SFX.roundFanfare && SFX.roundFanfare(); }catch(e){}
+  } else {
+    rev.classList.add('carry');
+    if(icon) icon.textContent='🔥';
+    if(title) title.textContent = 'PUSH — POT CARRIES OVER';
+    if(sub) sub.textContent = 'Hole '+(info.hole+2)+' now worth '+info.nextPot+' skins';
+    try{ SFX.unlock && SFX.unlock(); }catch(e){}   // tense rising sting for a carryover
+  }
+  // restart the pop animation
+  rev.classList.remove('show'); void rev.offsetWidth; rev.classList.add('show');
+  clearTimeout(rev._t);
+  rev._t = setTimeout(()=>{ rev.classList.remove('show'); updateSkinPot(); }, 2000);
 }
 
 /* fire a shot with an explicit power (for timeout auto-shots) — clean contact, straight */
@@ -9000,7 +9368,7 @@ const NET = (function(){
   }
 
   // --- lobby state shown in the waiting room ---
-  const lobbyState = { open:false, code:null, players:[], host:false, chat:[] };
+  const lobbyState = { open:false, code:null, players:[], host:false, chat:[], localPlayers:[] };
   window.lobbyState = lobbyState;
 
   function setLobbyHint(t){ const e=$m('lobHint'); if(e) e.textContent = t; }
@@ -9011,18 +9379,34 @@ const NET = (function(){
     const codeEl = $m('lobCode'); if(codeEl) codeEl.textContent = lobbyState.code || '—';
     const players = lobbyState.players || [];
     const me = players.find(p=>p.seat===NET.me.seat);
-    lobbyState.host = !!(me && me.host);
+    // Host status: if I created this lobby, I'm the host regardless of whether the player
+    // list has arrived yet. Otherwise derive it from my entry in the list. (Without the
+    // sticky flag, the first render before onPlayers fires would wrongly clear host and
+    // hide the host controls + add-local button.)
+    if(lobbyState.iCreated){ lobbyState.host = true; }
+    else if(me){ lobbyState.host = !!me.host; }
+    // if neither (list not in yet and I didn't create), leave the previous value as-is
     // host sees the FORMAT/COURSE pickers; joiners see the chosen course read-only
     const hostOpts = $m('lobHostOptions'); if(hostOpts) hostOpts.style.display = lobbyState.host ? 'block' : 'none';
     const roCourse = $m('lobCourseReadonly'); if(roCourse) roCourse.style.display = lobbyState.host ? 'none' : 'flex';
     const cn = $m('lobCourseName'); if(cn) cn.textContent = (COURSES[MP_setup.courseIdx]||{}).name || 'Sakura Links';
-    const cnt = $m('lobCount'); if(cnt) cnt.textContent = players.length + '/4';
+    const cnt = $m('lobCount');
+    { const selfShown = (lobbyState.iCreated && !players.some(p=>p.seat===NET.me.seat)) ? 1 : 0;
+      const total = players.length + selfShown + (lobbyState.localPlayers||[]).length;
+      if(cnt) cnt.textContent = total + '/4'; }
 
     const list = $m('lobPlayers'); if(!list) return;
     list.innerHTML = '';
-    const seatsNow = new Set(players.map(p=>p.seat));
-    // filled seats
-    players.slice().sort((a,b)=>a.seat-b.seat).forEach(p=>{
+    // Build the networked-player list to display. If I created the lobby but the server's
+    // player list hasn't arrived yet, show ME as Player 1 / HOST right away so the lobby
+    // never looks empty while connecting.
+    let netPlayers = players.slice();
+    if(lobbyState.iCreated && !netPlayers.some(p=>p.seat===NET.me.seat)){
+      netPlayers.push({ seat: NET.me.seat, name: (window._savedName||'You'), host:true, ready:false, _selfPlaceholder:true });
+    }
+    const seatsNow = new Set(netPlayers.map(p=>p.seat));
+    // filled seats (networked players)
+    netPlayers.slice().sort((a,b)=>a.seat-b.seat).forEach(p=>{
       const row = document.createElement('div');
       const isNew = !_prevSeats.has(p.seat) && _prevSeats.size>0;
       row.className = 'lobRow' + (isNew ? ' joining' : '');
@@ -9032,14 +9416,33 @@ const NET = (function(){
                        <span class="lobName">${p.name||('Player '+(p.seat+1))}</span>${readyChip}`;
       list.appendChild(row);
     });
+    // LOCAL players the host added (same device) — editable name + remove
+    const baseSeat = netPlayers.length;
+    (lobbyState.localPlayers||[]).forEach((nm, li)=>{
+      const seat = baseSeat + li;
+      const row = document.createElement('div');
+      row.className = 'lobRow lobLocal';
+      row.innerHTML = `<span class="lobAv" style="background:${MP_COLORS[seat]||'#888'}">${seat+1}</span>
+                       <input class="lobLocalName" data-li="${li}" maxlength="12" value="${nm}">
+                       <span class="lobLocalTag">LOCAL</span>
+                       <button class="lobLocalDel" data-li="${li}" title="Remove">✕</button>`;
+      list.appendChild(row);
+    });
+    // wire local name edits + removes
+    list.querySelectorAll('.lobLocalName').forEach(inp=> inp.oninput = e=>{ lobbyState.localPlayers[+e.target.dataset.li] = e.target.value; });
+    list.querySelectorAll('.lobLocalDel').forEach(b=> b.onclick = ()=>{ lobbyState.localPlayers.splice(+b.dataset.li,1); renderLobby(); });
     // empty slots up to 4
-    for(let s=players.length; s<4; s++){
+    const filled = netPlayers.length + (lobbyState.localPlayers||[]).length;
+    for(let s=filled; s<4; s++){
       const row = document.createElement('div');
       row.className = 'lobRow empty';
       row.innerHTML = `<span class="lobAv">${s+1}</span><span class="lobName">Open slot…</span>`;
       list.appendChild(row);
     }
     _prevSeats = seatsNow;
+
+    // host can add local players (same device); show the row only for the host and only if room
+    { const lr=$m('lobLocalRow'); if(lr) lr.style.display = (lobbyState.host && filled<4) ? 'block' : 'none'; }
 
     // ready button reflects my state
     const rb = $m('lobReadyBtn');
@@ -9079,6 +9482,7 @@ const NET = (function(){
     NET.use((typeof FORCE_LOCAL_NET!=='undefined' && FORCE_LOCAL_NET) ? 'local'
             : (PARTY_CONFIGURED ? 'party' : 'local'));
     lobbyState.open = true; lobbyState.players=[]; lobbyState.chat=[];
+    lobbyState.iCreated = false; lobbyState.host = false; lobbyState.localPlayers = [];
     // the "Add test friend" button is only meaningful in the in-page mock; hide it for real online play
     { const af=$m('lobAddFriend'); if(af) af.style.display = (NET.mode==='local') ? '' : 'none'; }
     setLobbyHint(NET.mode==='local'
@@ -9087,12 +9491,13 @@ const NET = (function(){
     renderLobby();
   }
   window.openLobbyScreen = openLobbyScreen;
+  window.renderLobby = renderLobby;
 
   function hostCreate(){
     const name = (($m('lobNameInput')&&$m('lobNameInput').value)||'You').trim().slice(0,12) || 'You';
     try{ window._savedName = name; saveProgress(); }catch(e){}
     const code = NET.create(name, { scoreMode: MP_setup.scoreMode, mode: MP_setup.mode, courseIdx: MP_setup.courseIdx });
-    lobbyState.code = code; lobbyState.host = true;
+    lobbyState.code = code; lobbyState.host = true; lobbyState.iCreated = true;
     $m('lobCreateRow') && ($m('lobCreateRow').style.display='none');
     $m('lobRoom') && ($m('lobRoom').style.display='block');
     renderLobby();
@@ -9103,28 +9508,47 @@ const NET = (function(){
     const code = (($m('lobJoinInput')&&$m('lobJoinInput').value)||'').trim();
     if(!/^\d{4}$/.test(code)){ setLobbyHint('Enter the 4-digit code.'); return; }
     NET.join(code, name);
+    lobbyState.iCreated = false; lobbyState.host = false;
     $m('lobCreateRow') && ($m('lobCreateRow').style.display='none');
     $m('lobRoom') && ($m('lobRoom').style.display='block');
     setLobbyHint('Joining '+code+'…');
   }
   function hostStart(){
-    NET.start({ scoreMode: MP_setup.scoreMode, mode: MP_setup.mode, courseIdx: MP_setup.courseIdx });
+    NET.start({ scoreMode: MP_setup.scoreMode, mode: MP_setup.mode, courseIdx: MP_setup.courseIdx,
+                localPlayers: (lobbyState.localPlayers||[]).slice(), hostSeat: NET.me.seat });
   }
 
   // ---- launch the actual match from lobby players ----
   function launchOnlineMatch(d){
     const lp = (d.players||lobbyState.players||[]).slice().sort((a,b)=>a.seat-b.seat);
+    const settings = d.settings || { scoreMode:'stroke', courseIdx:0 };
+    const localNames = (settings.localPlayers||[]);
+    const hostSeat = settings.hostSeat;
     const players = lp.map((p,i)=>({
       name: p.name||('Player '+(i+1)),
       team: null,
-      color: MP_COLORS[i],
+      color: MP_COLORS[p.seat],
       seat: p.seat,
-      ball:null, strokes:0, holed:false, total:0, holeStrokes:0, totalPrev:0, matchPoints:0
+      local:false,
+      ball:null, strokes:0, holed:false, total:0, holeStrokes:0, totalPrev:0, matchPoints:0, skins:0
     }));
-    const settings = d.settings || { scoreMode:'stroke', courseIdx:0 };
-    // stroke play is the shipped online mode for now; teams/match come later
-    MP = { on:true, online:true, mySeat: NET.me.seat, mode:'ffa', scoreMode:'stroke',
-           courseIdx: settings.courseIdx||0, players, turn:0, holeIdx:0, deadline:0, clockTimer:null };
+    // append the host's LOCAL players as extra seats after the networked ones; these are
+    // controlled from the host's device (same screen, take turns).
+    const baseSeat = lp.length;
+    localNames.forEach((nm, li)=>{
+      const seat = baseSeat + li;
+      players.push({
+        name: nm || ('Player '+(seat+1)), team:null, color: MP_COLORS[seat], seat,
+        local:true, ownerSeat: hostSeat,
+        ball:null, strokes:0, holed:false, total:0, holeStrokes:0, totalPrev:0, matchPoints:0, skins:0
+      });
+    });
+    const sMode = settings.scoreMode || 'stroke';
+    // which seats does THIS device control? my own seat, plus any local players I own (host).
+    const mySeats = new Set([NET.me.seat]);
+    if(hostSeat===NET.me.seat){ players.forEach(p=>{ if(p.local) mySeats.add(p.seat); }); }
+    MP = { on:true, online:true, mySeat: NET.me.seat, mySeats, mode:'ffa', scoreMode:sMode,
+           courseIdx: settings.courseIdx||0, players, turn:0, holeIdx:0, deadline:0, clockTimer:null, skinPot:1 };
     practiceMode=false; rangeMode=false; courseIdx = MP.courseIdx; inMenu=false;
     lobbyState.open=false;
     $m('mpScreen') && ($m('mpScreen').style.display='none');
@@ -9222,6 +9646,14 @@ const NET = (function(){
     $m('lobJoinBtn') && ($m('lobJoinBtn').onclick = joinByCode);
     $m('lobStart') && ($m('lobStart').onclick = hostStart);
     $m('lobAddFriend') && ($m('lobAddFriend').onclick = ()=>{ NET.addMockFriend(); });
+    $m('lobAddLocal') && ($m('lobAddLocal').onclick = ()=>{
+      const used = (lobbyState.players||[]).length + (lobbyState.localPlayers||[]).length;
+      if(used >= 4){ setLobbyHint('Lobby is full (4 players max).'); return; }
+      lobbyState.localPlayers = lobbyState.localPlayers || [];
+      lobbyState.localPlayers.push('Player '+(used+1));
+      try{ SFX.click && SFX.click(); }catch(e){}
+      renderLobby();
+    });
     $m('lobCopyBtn') && ($m('lobCopyBtn').onclick = ()=>{ navigator.clipboard&&navigator.clipboard.writeText(lobbyState.code||''); setLobbyHint('Code copied.'); });
     // ready-up toggle (non-host)
     $m('lobReadyBtn') && ($m('lobReadyBtn').onclick = ()=>{
@@ -9294,10 +9726,18 @@ $m('course3Play').onclick = ()=>enterGame(2);
 { const e=$m('course5Play'); if(e) e.onclick = ()=>enterGame(4); }
 { const e=$m('course6Play'); if(e) e.onclick = ()=>enterGame(5); }
 $m('backBtn').onclick = showTours;
+{ const tb=$m('csTopBack'); if(tb) tb.onclick = ()=>{ ac(); showTours(); }; }
 { const tb=$m('tourBackBtn'); if(tb) tb.onclick = showMenu; }
 { const sb=$m('statsBtnT'); if(sb) sb.onclick = showStats; }
 { const st=$m('storeBtnT'); if(st) st.onclick = showStore; }
 { const rb=$m('retryBtn'); if(rb) rb.onclick = ()=>{ if(!inMenu) startHole(holeIdx, true); }; }
+$m('tcContinue') && ($m('tcContinue').onclick = ()=>{
+  $m('tourCelebrate').classList.remove('show');
+  /* go to the tour that contains the newly unlocked course (or stay if none) and play
+     the course unlock reveal there */
+  if(window._unlockReveal!=null){ const ut=tourOfCourse(window._unlockReveal); if(ut>=0) tourIdx=ut; }
+  showCourses();
+});
 { const mb=$m('menuBtnHud'); if(mb) mb.onclick = ()=>{ if(!inMenu) openInGameSettings(); }; }
 { const sk=$m('skipHoleBtn'); if(sk) sk.onclick = ()=>{
     if(inMenu || rangeMode || practiceMode || (MP&&MP.on)) return;
