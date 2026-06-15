@@ -1207,7 +1207,7 @@
         <div class="courseBest" id="course2Best">Best: —</div>
         <div class="cpProgress"><div class="cpBar"><div class="cpFill" id="course2Prog"></div></div><div class="cpLabel" id="course2ProgLbl">0 / 9 holes</div></div>
         <button class="teeBtn" id="course2Play"><span><svg class="btnIco" viewBox="0 0 24 24" fill="none"><path d="M7 21 V3" stroke="#1d6b3a" stroke-width="2.4" stroke-linecap="round"/><path d="M7 3.5 L18 7 L7 10.5 Z" fill="#e8554e"/></svg>TEE OFF</span></button>
-        <div class="lockBadge" id="course2Lock">🔒 Finish Sakura Links to unlock</div>
+        <div class="lockBadge" id="course2Lock">🔒 Birdie every hole on Sakura Links to unlock</div>
         <div class="lockX" id="course2X"></div>
       </div>
       <div class="courseCard" id="course3">
@@ -1258,7 +1258,7 @@
         <div class="courseBest" id="course3Best">Best: —</div>
         <div class="cpProgress"><div class="cpBar"><div class="cpFill" id="course3Prog"></div></div><div class="cpLabel" id="course3ProgLbl">0 / 9 holes</div></div>
         <button class="teeBtn" id="course3Play"><span><svg class="btnIco" viewBox="0 0 24 24" fill="none"><path d="M7 21 V3" stroke="#1d6b3a" stroke-width="2.4" stroke-linecap="round"/><path d="M7 3.5 L18 7 L7 10.5 Z" fill="#e8554e"/></svg>TEE OFF</span></button>
-        <div class="lockBadge" id="course3Lock">🔒 Finish Oak Ridge to unlock</div>
+        <div class="lockBadge" id="course3Lock">🔒 Birdie every hole on Oak Ridge to unlock</div>
         <div class="lockX" id="course3X"></div>
       </div>
       <div class="courseCard open" id="course4">
@@ -1303,7 +1303,7 @@
         <div class="courseBest" id="course4Best">Best: —</div>
         <div class="cpProgress"><div class="cpBar"><div class="cpFill" id="course4Prog"></div></div><div class="cpLabel" id="course4ProgLbl">0 / 9 holes</div></div>
         <button class="teeBtn" id="course4Play"><span><svg class="btnIco" viewBox="0 0 24 24" fill="none"><path d="M7 21 V3" stroke="#1d6b3a" stroke-width="2.4" stroke-linecap="round"/><path d="M7 3.5 L18 7 L7 10.5 Z" fill="#e8554e"/></svg>TEE OFF</span></button>
-        <div class="lockBadge" id="course4Lock">🔒 Finish Volcano Ridge to unlock</div>
+        <div class="lockBadge" id="course4Lock">🔒 Birdie every hole on Volcano Ridge to unlock</div>
         <div class="lockX" id="course4X"></div>
       </div>
       <div class="courseCard open" id="course5">
@@ -1351,7 +1351,7 @@
         <div class="courseBest" id="course5Best">Best: —</div>
         <div class="cpProgress"><div class="cpBar"><div class="cpFill" id="course5Prog"></div></div><div class="cpLabel" id="course5ProgLbl">0 / 9 holes</div></div>
         <button class="teeBtn" id="course5Play"><span><svg class="btnIco" viewBox="0 0 24 24" fill="none"><path d="M7 21 V3" stroke="#1d6b3a" stroke-width="2.4" stroke-linecap="round"/><path d="M7 3.5 L18 7 L7 10.5 Z" fill="#e8554e"/></svg>TEE OFF</span></button>
-        <div class="lockBadge" id="course5Lock">🔒 Finish Maple Falls to unlock</div>
+        <div class="lockBadge" id="course5Lock">🔒 Birdie every hole on Maple Falls to unlock</div>
         <div class="lockX" id="course5X"></div>
       </div>
       <div class="courseCard open" id="course6">
@@ -1395,7 +1395,7 @@
         <div class="courseBest" id="course6Best">Best: —</div>
         <div class="cpProgress"><div class="cpBar"><div class="cpFill" id="course6Prog"></div></div><div class="cpLabel" id="course6ProgLbl">0 / 9 holes</div></div>
         <button class="teeBtn" id="course6Play"><span><svg class="btnIco" viewBox="0 0 24 24" fill="none"><path d="M7 21 V3" stroke="#1d6b3a" stroke-width="2.4" stroke-linecap="round"/><path d="M7 3.5 L18 7 L7 10.5 Z" fill="#e8554e"/></svg>TEE OFF</span></button>
-        <div class="lockBadge" id="course6Lock">🔒 Finish The Glades to unlock</div>
+        <div class="lockBadge" id="course6Lock">🔒 Birdie every hole on The Glades to unlock</div>
         <div class="lockX" id="course6X"></div>
       </div>
     </div>
@@ -1731,7 +1731,7 @@ const SLOPE_G = 170;                 // gravity scale on the green height field
 const FRICTION = {fairway:115, green:46, rough:265, highrough:560, sand:950, tee:115};
 const BASE_DECEL = 115;
 const GRAV = 430;
-const REQUIRED_DIFF = 0;             // advance on par or better (-1 for strict birdie gating)
+const REQUIRED_DIFF = -1;            // campaign: must birdie (one under par) to advance to the next hole
 
 /* clubs: 0 driver, 1 iron, 2 wedge, 3 putter — pendulum speeds are rad/s */
 const CLUBS = [
@@ -2825,8 +2825,9 @@ function tourComplete(ti){
   const hd = stats.holesDone||[];
   return t.courses.every(ci => (hd[ci]||0) >= 9);
 }
-/* a tour is unlocked if it's the first, or you've birdied on the previous tour */
-function tourUnlocked(ti){ return (typeof TESTING!=='undefined'&&TESTING) || ti===0 || tourBirdied(ti-1); }
+/* a tour is unlocked if it's the first, or you've COMPLETED the previous tour
+   (every hole on all its courses birdied, since a hole only counts as done on a birdie) */
+function tourUnlocked(ti){ return (typeof TESTING!=='undefined'&&TESTING) || ti===0 || tourComplete(ti-1); }
 /* which tour a course belongs to */
 function tourOfCourse(ci){ return TOURS.findIndex(t => t.courses.includes(ci)); }
 /* a course is unlocked if its tour is unlocked AND it's first in the tour or the prior map is done */
@@ -3157,7 +3158,7 @@ let puttWobblePhase = 0;      /* free-running phase for the wobble              
 const PUTT_NERVES = 9;        /* nerves start easing in at ~9s                       */
 function resetPuttPressure(){ puttClock = 0; puttPressure = 0; puttWobblePhase = 0; }
 let streak = 0;
-const TESTING = true;   /* unlock all tours/courses while testing; set false for release */
+const TESTING = false;  /* RELEASE: campaign courses unlock through play (multiplayer still has all courses) */
 let stats = {bestRound:null, bestStreak:0, bestBirdieStreak:0,
   bests:[null,null,null,null,null,null], holesDone:[0,0,0,0,0,0], rounds:[0,0,0,0,0,0], totalStrokes:0, totalHoles:0,
   challenges:{}, coins:1000, ownedSkins:['white'], equippedSkin:'white', tourBirdie:{}};  /* everyone starts with 1000 coins to buy a custom ball */
@@ -7498,7 +7499,7 @@ function holed(){
     document.getElementById('endSub').textContent =
       qualified
         ? (last ? `You conquered all 9 holes!` : `${strokes} stroke${strokes===1?'':'s'} on a Par ${PAR} — hole ${holeIdx+2} unlocked`)
-        : `${strokes} on a Par ${PAR} — par or better to advance. Run it back!`;
+        : `${strokes} on a Par ${PAR} — birdie or better to advance. Run it back!`;
     renderScorecard();
     const total = roundDiffs.reduce((a,b)=>a+(b??0),0);
     document.getElementById('roundVal').textContent = fmtScore(roundDiffs.some(d=>d!==undefined)?total:null);
@@ -8367,7 +8368,11 @@ function renderTourCards(){
     const totalMaps = t.courses.length;
     const doneMaps = t.courses.filter(ci => (stats.holesDone?.[ci]||0) >= 9).length;
     const pct = totalMaps ? Math.round(doneMaps/totalMaps*100) : 0;
-    const lockMsg = ti>0 ? ('🔒 Birdie a hole on '+TOURS[ti-1].name+' to unlock') : '';
+    const prevT = TOURS[ti-1];
+    const prevMaps = prevT ? prevT.courses.length : 0;
+    const lockMsg = ti>0
+      ? ('🔒 Birdie every hole on all '+prevMaps+' '+prevT.name+' map'+(prevMaps>1?'s':'')+' to unlock')
+      : '';
     const mapsLabel = totalMaps ? (totalMaps+' map'+(totalMaps>1?'s':'')) : 'Coming soon';
     return `<div class="courseCard ${unlocked?'open':'locked'}" data-tour="${ti}">
       ${tourBannerSVG(ti)}
@@ -8447,7 +8452,7 @@ function showCourses(){
     if(playBtn) playBtn.style.display = open ? '' : 'none';
     if(lockEl){
       lockEl.style.display = open ? 'none' : '';
-      if(!open && pos>0){ const prevName = COURSES[tourCourses[pos-1]].name; lockEl.textContent = '🔒 Finish '+prevName+' to unlock'; }
+      if(!open && pos>0){ const prevName = COURSES[tourCourses[pos-1]].name; lockEl.textContent = '🔒 Birdie every hole on '+prevName+' to unlock'; }
     }
     if(xEl) xEl.innerHTML = open ? '' : X;
   }
