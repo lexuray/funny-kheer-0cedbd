@@ -8793,8 +8793,8 @@ function fireShotWithPower(pct){
 }
 
 
-/* ===== ONLINE MP CONFIG ===== set PARTY_HOST + PARTY_CONFIGURED=true once you deploy PartyKit */
-const PARTY_CONFIGURED = false;   // flip to true after deploying the PartyKit server
+/* ===== ONLINE MP CONFIG ===== Cloudflare Worker backend (live) */
+const PARTY_CONFIGURED = true;    // multiplayer server is deployed
 let FORCE_LOCAL_NET = false;      // dev: force the in-page mock transport
 
 /* ============================================================================
@@ -8824,9 +8824,8 @@ const NET = (function(){
   function on(ev, fn){ handlers[ev] = fn; }
   function emit(ev, data){ if(handlers[ev]) handlers[ev](data); }
 
-  /* ---- PartyKit endpoint. Set this to your deployed PartyKit host once live. ----
-     e.g. 'birdie-blitz.<your-user>.partykit.dev'.  Leave as-is for local mock. */
-  const PARTY_HOST = 'REPLACE_WITH_YOUR_PARTYKIT_HOST';
+  /* ---- Multiplayer server host (Cloudflare Worker, live). ---- */
+  const PARTY_HOST = 'birdie-blitz.benjaminmcbell.workers.dev';
 
   function code4(){ return String(Math.floor(1000 + Math.random()*9000)); }
 
@@ -8893,7 +8892,7 @@ const NET = (function(){
     let ws = null;
     function connect(code){
       const proto = location.protocol==='https:' ? 'wss' : 'ws';
-      ws = new WebSocket(`${proto}://${PARTY_HOST}/parties/main/${code}`);
+      ws = new WebSocket(`${proto}://${PARTY_HOST}/room/${code}`);
       ws.onopen = ()=> ws.send(JSON.stringify({ t:'hello', name:me.name, host:me.host }));
       ws.onmessage = (m)=>{
         let msg; try{ msg = JSON.parse(m.data); }catch{ return; }
@@ -9055,6 +9054,8 @@ const NET = (function(){
     NET.use((typeof FORCE_LOCAL_NET!=='undefined' && FORCE_LOCAL_NET) ? 'local'
             : (PARTY_CONFIGURED ? 'party' : 'local'));
     lobbyState.open = true; lobbyState.players=[]; lobbyState.chat=[];
+    // the "Add test friend" button is only meaningful in the in-page mock; hide it for real online play
+    { const af=$m('lobAddFriend'); if(af) af.style.display = (NET.mode==='local') ? '' : 'none'; }
     setLobbyHint(NET.mode==='local'
       ? 'Test mode (server not deployed yet): use “＋ Add test friend”, then Start.'
       : 'Create a lobby and share the 4-digit code, or join a friend.');
