@@ -8902,7 +8902,7 @@ const NET = (function(){
       ws.onmessage = (m)=>{
         let msg; try{ msg = JSON.parse(m.data); }catch{ return; }
         switch(msg.t){
-          case 'players': room.players = msg.players; me.seat = msg.you; emit('onPlayers', msg.players); break;
+          case 'players': room.players = msg.players; if(msg.you!==undefined && msg.you!==null) me.seat = msg.you; emit('onPlayers', msg.players); break;
           case 'open':    room.code = code; emit('onOpen', { code }); break;
           case 'start':   room.open=false; emit('onStart', msg); break;
           case 'shot':    emit('onShot', msg); break;
