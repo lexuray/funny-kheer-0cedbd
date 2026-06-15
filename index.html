@@ -327,8 +327,8 @@
   /* ===== MULTIPLAYER screen: shares the course-select look ===== */  #mpScreen{
     position:absolute; inset:0; z-index:41; overflow-y:auto; -webkit-overflow-scrolling:touch; display:none;
     background:linear-gradient(180deg,#9fd9f6 0%,#bde7fb 45%,#dff4ff 75%,#eafff0 100%);
-    flex-direction:column; align-items:center; justify-content:flex-start;
-    padding:max(24px,4vh) 0 40px; }
+    flex-direction:column; align-items:center; justify-content:center;
+    padding:max(24px,4vh) 0; }
   #mpScreen .csBgShared{ position:fixed; inset:0; z-index:0; width:100%; height:100%;
     pointer-events:none; filter:saturate(1.05); }
   #mpScreen .csVignetteShared{ position:fixed; inset:0; z-index:1; pointer-events:none;
@@ -372,7 +372,7 @@
   .mpTeam.tA{ background:rgba(74,163,255,.22); color:#2f6db5; } .mpTeam.tB{ background:rgba(255,122,74,.22); color:#c25a2c; }
   .mpCard.teamA{ box-shadow:0 12px 26px rgba(10,40,60,.26), inset 4px 0 0 #4aa3ff, 0 0 0 1px rgba(255,255,255,.5) inset; }
   .mpCard.teamB{ box-shadow:0 12px 26px rgba(10,40,60,.26), inset 4px 0 0 #ff7a4a, 0 0 0 1px rgba(255,255,255,.5) inset; }
-  .mpFoot{ position:relative; z-index:3; display:flex; gap:14px; margin-top:26px; align-items:center; }
+  .mpFoot{ position:relative; z-index:3; display:flex; gap:14px; margin-top:18px; align-items:center; }
   /* ===== online lobby screen ===== */
   #lobbyScreen{ position:fixed; inset:0; z-index:60; display:none; flex-direction:column; align-items:center;
     justify-content:flex-start; padding-top:8vh; overflow:hidden;
@@ -390,10 +390,11 @@
   .lobField input{ font-size:18px; font-weight:700; padding:11px 14px; border-radius:11px; border:2px solid #bfe0c8;
     background:#fff; color:#1d3a22; outline:none; text-align:center; letter-spacing:1px; }
   .lobField input:focus{ border-color:#7cc24a; }
-  .lobBtns{ display:flex; justify-content:center; }
+  .lobBtns{ display:flex; justify-content:center; margin-bottom:6px; }
+  .lobBtns .menuBtn{ min-width:180px; }
   .lobOr{ text-align:center; font-size:11px; font-weight:700; letter-spacing:1px; color:#6a8a72; margin:16px 0 12px; }
-  .lobJoinField{ flex-direction:row; align-items:center; gap:10px; }
-  .lobJoinField input{ flex:1; font-size:26px; letter-spacing:8px; }
+  .lobJoinField{ flex-direction:column; align-items:stretch; margin-bottom:10px; }
+  .lobJoinField input{ width:100%; font-size:30px; letter-spacing:10px; text-align:center; padding:12px 14px; }
   .lobCodeWrap{ display:flex; align-items:center; justify-content:center; gap:10px; margin-bottom:18px; }
   .lobCodeLabel{ font-size:10px; font-weight:800; letter-spacing:2px; color:#3a6a48; }
   #lobCode{ font-size:30px; font-weight:900; letter-spacing:8px; color:#1d5a2e; background:#eaf6ee;
@@ -786,6 +787,27 @@
   #settingsBox label{ display:flex; flex-direction:column; gap:5px; font-size:11px; font-weight:900; letter-spacing:1.6px; color:#557; }
   #settingsBox input[type=range]{ accent-color:#f0a818; }
   #settingsBox select{ font-family:inherit; font-weight:800; padding:7px; border-radius:9px; border:2px solid #cfe3ee; }
+  /* controls reference screen */
+  #controlsScreen{
+    position:absolute; inset:0; z-index:51; display:none;
+    background:rgba(20,40,55,.45); -webkit-backdrop-filter:blur(4px); backdrop-filter:blur(4px);
+    align-items:center; justify-content:center;
+  }
+  #controlsBox{
+    background:linear-gradient(180deg,#ffffff,#eef7fb);
+    border-radius:20px; padding:24px 28px; width:min(380px,88%); max-height:88vh; overflow-y:auto;
+    box-shadow:0 14px 40px rgba(10,30,50,.4), inset 0 1px 0 #fff;
+    display:flex; flex-direction:column; gap:4px;
+  }
+  #controlsBox h2{ font-weight:900; letter-spacing:3px; color:#27607c; text-align:center; margin-bottom:8px; }
+  .ctlSection{ font-size:10px; font-weight:900; letter-spacing:2px; color:#3a8aac; margin:14px 0 6px;
+    border-bottom:2px solid #e0eef4; padding-bottom:5px; }
+  .ctlRow{ display:flex; align-items:center; justify-content:space-between; gap:12px; padding:5px 0; }
+  .ctlAct{ font-size:13px; font-weight:700; color:#33485a; }
+  .ctlKey{ display:flex; gap:5px; align-items:center; font-size:12px; font-weight:700; color:#5a7488; flex-shrink:0; }
+  .ctlKey kbd{ font-family:inherit; font-size:12px; font-weight:800; color:#27607c; background:#fff;
+    border:1.5px solid #cfe3ee; border-bottom-width:3px; border-radius:6px; padding:2px 8px; min-width:14px; text-align:center; }
+  #controlsBox .menuBtn{ margin-top:16px; }
   /* hole intro card */
   #holeIntro{
     position:absolute; left:50%; top:34%; transform:translate(-50%,-50%) scale(.8);
@@ -840,11 +862,6 @@
       <div id="mpTurn"><span class="mpDot"></span><span id="mpTurnName">Player 1</span><span>·</span><span id="mpClock">25</span>s</div>
     </div>
     <div id="mpBoard"></div>
-    <!-- TEMP TEST BUTTON: jump to the next hole without finishing. Remove this block + its handler later. -->
-    <button id="nextHoleBtn" style="position:absolute;top:10px;left:50%;transform:translateX(-50%);z-index:50;
-      background:rgba(20,30,24,.82);color:#cfe8d4;border:1px solid #4a8c46;border-radius:8px;
-      padding:7px 14px;font:600 13px system-ui,sans-serif;letter-spacing:.5px;cursor:pointer;">
-      NEXT HOLE ▶ <span style="opacity:.6">(test)</span></button>
     <canvas id="minimap" width="150" height="96"></canvas>
 
     <button id="fsBtn" title="Fullscreen (F)" style="position:absolute;bottom:10px;right:10px;z-index:40;
@@ -1427,12 +1444,7 @@
     </svg>
     <div class="csVignetteShared"></div>
     <h2>MULTIPLAYER</h2>
-    <div class="csSub">Pass &amp; play on one device · or play online with friends</div>
-
-    <div id="mpModeToggle">
-      <button class="on" id="mpModeLocal">PASS &amp; PLAY</button>
-      <button id="mpModeOnline">PLAY ONLINE</button>
-    </div>
+    <div class="csSub">Play online with friends · add local players too</div>
 
     <div id="mpSetup">
       <!-- player count -->
@@ -1482,7 +1494,9 @@
           <div class="lobOr">— or join a friend —</div>
           <div class="lobField lobJoinField">
             <input id="lobJoinInput" maxlength="4" inputmode="numeric" pattern="\d{4}" placeholder="0000">
-            <button class="menuBtn small alt" id="lobJoinBtn">JOIN</button>
+          </div>
+          <div class="lobBtns">
+            <button class="menuBtn small alt" id="lobJoinBtn">JOIN LOBBY</button>
           </div>
         </div>
 
@@ -1588,8 +1602,36 @@
       <label>GRAPHICS QUALITY
         <select id="qualitySel"><option value="high" selected>HIGH</option><option value="low">LOW</option></select>
       </label>
+      <button class="menuBtn small" id="controlsBtn">⌨ CONTROLS</button>
       <button class="menuBtn small danger" id="resetBtn">RESET PROGRESS</button>
       <button class="menuBtn small" id="settingsClose">DONE</button>
+    </div>
+  </div>
+
+  <!-- ============== CONTROLS REFERENCE ============== -->
+  <div id="controlsScreen">
+    <div id="controlsBox">
+      <h2>CONTROLS</h2>
+
+      <div class="ctlSection">MOUSE &amp; TOUCH</div>
+      <div class="ctlRow"><span class="ctlAct">Swing</span><span class="ctlKey">Drag back &amp; release</span></div>
+      <div class="ctlRow"><span class="ctlAct">Power</span><span class="ctlKey">How far you drag</span></div>
+      <div class="ctlRow"><span class="ctlAct">Aim / shape</span><span class="ctlKey">Drag left or right</span></div>
+      <div class="ctlRow"><span class="ctlAct">Spin (backspin / topspin)</span><span class="ctlKey">Drag the spin dial</span></div>
+
+      <div class="ctlSection">KEYBOARD</div>
+      <div class="ctlRow"><span class="ctlAct">Aim left / right</span><span class="ctlKey"><kbd>←</kbd> <kbd>→</kbd></span></div>
+      <div class="ctlRow"><span class="ctlAct">Backspin / topspin</span><span class="ctlKey"><kbd>↑</kbd> <kbd>↓</kbd></span></div>
+      <div class="ctlRow"><span class="ctlAct">Skip flyover / continue</span><span class="ctlKey"><kbd>Space</kbd></span></div>
+      <div class="ctlRow"><span class="ctlAct">Retry hole</span><span class="ctlKey"><kbd>R</kbd></span></div>
+      <div class="ctlRow"><span class="ctlAct">Slope arrows on / off</span><span class="ctlKey"><kbd>S</kbd></span></div>
+      <div class="ctlRow"><span class="ctlAct">Green book on / off</span><span class="ctlKey"><kbd>C</kbd></span></div>
+      <div class="ctlRow"><span class="ctlAct">Replay last shot</span><span class="ctlKey"><kbd>P</kbd></span></div>
+      <div class="ctlRow"><span class="ctlAct">Fullscreen</span><span class="ctlKey"><kbd>F</kbd></span></div>
+      <div class="ctlRow"><span class="ctlAct">Menu</span><span class="ctlKey"><kbd>M</kbd></span></div>
+      <div class="ctlRow"><span class="ctlAct">Clubs (driving range)</span><span class="ctlKey"><kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd> <kbd>4</kbd></span></div>
+
+      <button class="menuBtn small" id="controlsClose">DONE</button>
     </div>
   </div>
 
@@ -3118,7 +3160,35 @@ let streak = 0;
 const TESTING = true;   /* unlock all tours/courses while testing; set false for release */
 let stats = {bestRound:null, bestStreak:0, bestBirdieStreak:0,
   bests:[null,null,null,null,null,null], holesDone:[0,0,0,0,0,0], rounds:[0,0,0,0,0,0], totalStrokes:0, totalHoles:0,
-  challenges:{}, coins:20000, ownedSkins:['white'], equippedSkin:'white', tourBirdie:{}};  /* TESTING: all tours/courses unlocked via TESTING flag */
+  challenges:{}, coins:1000, ownedSkins:['white'], equippedSkin:'white', tourBirdie:{}};  /* everyone starts with 1000 coins to buy a custom ball */
+
+/* ===== SAVE PROGRESS (player's own browser via localStorage) =====
+   Persists coins, owned/equipped ball, challenges, and best scores on this device. Works on
+   the live site; in some sandboxed previews storage is blocked, so every call is wrapped in
+   try/catch and the game runs fine either way (just without saving). */
+const SAVE_KEY = 'birdieBlitzSave_v1';
+function saveProgress(){
+  try{
+    const data = { stats, set: (typeof SET!=='undefined'?SET:null), name: (typeof window!=='undefined'?window._savedName:null) };
+    localStorage.setItem(SAVE_KEY, JSON.stringify(data));
+  }catch(e){ /* storage unavailable (private mode / sandbox) — play on without saving */ }
+}
+function loadProgress(){
+  try{
+    const raw = localStorage.getItem(SAVE_KEY);
+    if(!raw) return;
+    const data = JSON.parse(raw);
+    if(data && data.stats){
+      // merge saved values over the defaults so new fields in future updates still exist
+      stats = Object.assign({}, stats, data.stats);
+      if(!stats.ownedSkins || !stats.ownedSkins.length) stats.ownedSkins = ['white'];
+      if(!stats.equippedSkin) stats.equippedSkin = 'white';
+      if(typeof stats.coins !== 'number') stats.coins = 1000;
+    }
+    if(data && data.set && typeof SET!=='undefined'){ Object.assign(SET, data.set); }
+    if(data && data.name && typeof window!=='undefined') window._savedName = data.name;
+  }catch(e){ /* corrupt or blocked — ignore, start fresh */ }
+}
 /* ===== CHALLENGES (achievements) ===== id → {name, desc, icon}. stats.challenges[id]=true once earned. */
 const CHALLENGES = [
   {id:'dunk5',     name:'Splashdown',      desc:'Dunk hole 5 on Sakura straight from the air', icon:'🎯', coins:800},
@@ -3249,6 +3319,7 @@ function addCoins(n, src){
   if(!n) return;
   stats.coins = (stats.coins||0) + n;
   showCoinToast(n, src);
+  saveProgress();
 }
 let keys = {};
 let cam = {x:0, y:0, h:120, yaw:0, pitch:0.5, foc:400};
@@ -3289,6 +3360,7 @@ function ac(){
   return AC;
 }
 const SET = { sfx:0.8, music:0.55, quality:'high' };   /* player settings */
+loadProgress();   /* restore coins/balls/scores/settings from this browser, if any */
 const AUTOQ = { avg:0, t:0, good:0, user:false };       /* adaptive-quality tracker (user:true once they pick manually) */
 function tone(freq, dur, type='sine', vol=0.18, when=0, slide=0){
   try{
@@ -7030,7 +7102,14 @@ function finishShot(wasHoled){
 }
 /* ===== driving range UI ===== */
 function setRangeClub(ci){
+  /* only allow swapping clubs when standing over the ball (not mid-swing or mid-flight),
+     otherwise the meters/prediction can glitch */
+  if(typeof state!=='undefined' && state!==ST.AIM) return;
   clubIdx = ci; manualClub = true;
+  /* fresh setup for the new club: clear any spin/shape dialed in for the previous club, so
+     switching clubs doesn't carry hidden spin (e.g. backspin set on the wedge bleeding onto
+     the driver) or leave the prediction line jumping. */
+  spin = 0; shape = 0; pullShape = 0;
   document.getElementById('clubName').textContent = CLUBS[clubIdx].name;
   document.getElementById('spinChip').style.display = CLUBS[clubIdx].spinF>0.5 ? 'flex' : 'none';
   updateCtlUI();
@@ -8162,10 +8241,11 @@ function renderStore(){
     else { btn.classList.add('cant'); btn.innerHTML='<span class="bPrice"><svg class="coinIco" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" fill="#ffd84d" stroke="#e0a83c" stroke-width="1.4"/><path d="M12 7.5l1.3 2.7 3 .4-2.2 2.1.5 3-2.6-1.4-2.6 1.4.5-3-2.2-2.1 3-.4z" fill="#e0a83c"/></svg> '+skin.price+'</span>'; }
     btn.onclick=()=>{
       if(stats.equippedSkin===skin.id) return;
-      if(stats.ownedSkins.includes(skin.id)){ stats.equippedSkin=skin.id; if(SFX.click)SFX.click(); renderStore(); return; }
+      if(stats.ownedSkins.includes(skin.id)){ stats.equippedSkin=skin.id; if(SFX.click)SFX.click(); saveProgress(); renderStore(); return; }
       if((stats.coins||0) >= skin.price){
         stats.coins -= skin.price; stats.ownedSkins.push(skin.id); stats.equippedSkin=skin.id;
         if(SFX.fanfare) SFX.fanfare();
+        saveProgress();
         renderStore();
       }
     };
@@ -8447,35 +8527,21 @@ function showMultiplayer(){
   inMenu = true;
   $m('menuScreen').style.display='none';
   $m('mpScreen').style.display='flex';
-  buildMpPlayers();
-  setMpMode('local');                 // default to Pass & Play each time the screen opens
+  // online only: open straight into the lobby (local pass-and-play is retired; you can add
+  // local players from inside the online lobby instead)
+  const setup = $m('mpSetup'); if(setup) setup.style.display='none';
+  const startBtn = $m('mpStart'); if(startBtn) startBtn.style.display='none';
+  const online = $m('mpOnline'); if(online) online.style.display='block';
+  openLobbyScreen(true);
   initPetals(); if(!petalRAF) petalRAF = requestAnimationFrame(petalLoop);
 }
 
-/* toggle between local pass-and-play setup and the online lobby, both on one screen */
+/* retained for safety; online is the only path now */
 function setMpMode(mode){
-  MP_setup._screenMode = mode;
-  const local = (mode==='local');
-  const setup = $m('mpSetup'), online = $m('mpOnline');
-  if(setup)  setup.style.display  = local ? 'flex' : 'none';
-  if(online) online.style.display = local ? 'none' : 'block';
-  // footer Start button is only for local; online starts from inside the lobby
-  const startBtn = $m('mpStart'); if(startBtn) startBtn.style.display = local ? 'inline-flex' : 'none';
-  // toggle button states
-  const lb=$m('mpModeLocal'), ob=$m('mpModeOnline');
-  if(lb) lb.classList.toggle('on', local);
-  if(ob) ob.classList.toggle('on', !local);
-  // PLAYERS / MODE rows are local-only (online seats fill as friends join); SCORING + COURSE shared
-  const countRow = $m('mpCount') && $m('mpCount').closest('.mpBlock');
-  const modeRow  = $m('mpMode') && $m('mpMode').closest('.mpBlock');
-  const namesRow = $m('mpPlayers');
-  [countRow, modeRow, namesRow].forEach(el=>{ if(el) el.style.display = local ? '' : 'none'; });
-  if(!local){
-    // entering online mode: spin up the lobby transport + fresh create/join view
-    openLobbyScreen(true);
-  } else {
-    NET.close && NET.close();
-  }
+  const online = $m('mpOnline'); if(online) online.style.display='block';
+  const setup = $m('mpSetup'); if(setup) setup.style.display='none';
+  const startBtn = $m('mpStart'); if(startBtn) startBtn.style.display='none';
+  openLobbyScreen(true);
 }
 
 function startMultiplayerMatch(){
@@ -8998,6 +9064,7 @@ const NET = (function(){
 
   function hostCreate(){
     const name = (($m('lobNameInput')&&$m('lobNameInput').value)||'You').trim().slice(0,12) || 'You';
+    try{ window._savedName = name; saveProgress(); }catch(e){}
     const code = NET.create(name, { scoreMode: MP_setup.scoreMode, mode: MP_setup.mode, courseIdx: MP_setup.courseIdx });
     lobbyState.code = code; lobbyState.host = true;
     $m('lobCreateRow') && ($m('lobCreateRow').style.display='none');
@@ -9006,6 +9073,7 @@ const NET = (function(){
   }
   function joinByCode(){
     const name = (($m('lobNameInput')&&$m('lobNameInput').value)||'You').trim().slice(0,12) || 'You';
+    try{ window._savedName = name; saveProgress(); }catch(e){}
     const code = (($m('lobJoinInput')&&$m('lobJoinInput').value)||'').trim();
     if(!/^\d{4}$/.test(code)){ setLobbyHint('Enter the 4-digit code.'); return; }
     NET.join(code, name);
@@ -9165,8 +9233,6 @@ const NET = (function(){
 
 /* ---- multiplayer screen wiring ---- */
 $m('multiBtn') && ($m('multiBtn').onclick = ()=>{ ac(); startMusic(); showMultiplayer(); });
-$m('mpModeLocal') && ($m('mpModeLocal').onclick = ()=> setMpMode('local'));
-$m('mpModeOnline') && ($m('mpModeOnline').onclick = ()=> setMpMode('online'));
 $m('mpBack') && ($m('mpBack').onclick = ()=>{ NET.close&&NET.close(); showMenu(); });
 $m('mpStart') && ($m('mpStart').onclick = ()=> startMultiplayerMatch());
 $m('mpCount') && $m('mpCount').querySelectorAll('button').forEach(btn=> btn.onclick = ()=>{
@@ -9195,12 +9261,6 @@ $m('mpCourse') && $m('mpCourse').querySelectorAll('button').forEach(btn=> btn.on
 
 $m('playBtn').onclick = ()=>{ ac(); startMusic(); showTours(); };
 { const rb=$m('rangeBtnT'); if(rb) rb.onclick = ()=>{ ac(); startMusic(); enterWarmup(); }; }
-/* TEMP TEST: jump to the next hole in the current map (wraps to hole 1 after the last). Remove later. */
-$m('nextHoleBtn').onclick = ()=>{
-  if(inMenu) return;                                 /* only while playing a map */
-  const nHoles = CH().length;
-  startHole((holeIdx+1) % nHoles);
-};
 $m('course1Play').onclick = ()=>enterGame(0);
 $m('course2Play').onclick = ()=>enterGame(1);
 $m('course3Play').onclick = ()=>enterGame(2);
@@ -9219,13 +9279,22 @@ $m('storeBtn').onclick = showStore;
 $m('storeBack').onclick = hideStore;
 $m('settingsBtn').onclick = ()=>{ $m('settingsScreen').style.display='flex'; };
 $m('settingsClose').onclick = ()=>{ $m('settingsScreen').style.display='none'; };
-$m('sfxSlider').oninput = e=>{ SET.sfx = e.target.value/100; };
-$m('musicSlider').oninput = e=>{ SET.music = e.target.value/100; if(MUSIC.gain) MUSIC.gain.gain.value = SET.music*0.4; };
-$m('qualitySel').onchange = e=>{ SET.quality = e.target.value; AUTOQ.user = true; if(inMenu) initPetals(); };
+$m('controlsBtn') && ($m('controlsBtn').onclick = ()=>{ $m('controlsScreen').style.display='flex'; });
+$m('controlsClose') && ($m('controlsClose').onclick = ()=>{ $m('controlsScreen').style.display='none'; });
+$m('sfxSlider').oninput = e=>{ SET.sfx = e.target.value/100; saveProgress(); };
+$m('musicSlider').oninput = e=>{ SET.music = e.target.value/100; if(MUSIC.gain) MUSIC.gain.gain.value = SET.music*0.4; saveProgress(); };
+$m('qualitySel').onchange = e=>{ SET.quality = e.target.value; AUTOQ.user = true; if(inMenu) initPetals(); saveProgress(); };
+/* reflect any restored settings in the controls */
+{ const s=$m('sfxSlider');  if(s) s.value = Math.round(SET.sfx*100); }
+{ const m=$m('musicSlider'); if(m) m.value = Math.round(SET.music*100); }
+{ const q=$m('qualitySel'); if(q) q.value = SET.quality; }
+{ const ni=$m('lobNameInput'); if(ni && window._savedName){ ni.value = window._savedName; } }
 $m('resetBtn').onclick = ()=>{
   stats.bestRound=null; stats.bestStreak=0; stats.bests=[null,null,null,null,null,null];
   stats.holesDone=[0,0,0,0,0,0]; stats.rounds=[0,0,0,0,0,0]; stats.totalStrokes=0; stats.totalHoles=0; stats.bestBirdieStreak=0; stats.challenges={};
-  stats.coins=0; stats.ownedSkins=['white']; stats.equippedSkin='white';
+  stats.coins=1000; stats.ownedSkins=['white']; stats.equippedSkin='white';   /* back to a fresh 1000-coin start */
+  try{ localStorage.removeItem(SAVE_KEY); }catch(e){}
+  saveProgress();   /* write the fresh state so the reset itself persists */
   $m('courseBest').textContent='Best: —';
   $m('settingsScreen').style.display='none';
 };
