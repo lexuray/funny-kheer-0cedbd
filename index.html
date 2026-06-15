@@ -831,6 +831,14 @@
   #retryBtn:hover{ transform:translateY(-1px); }
   #retryBtn:active{ transform:translateY(3px); box-shadow:0 1px 0 rgba(20,60,30,.28); }
   #retryBtn .retryKey{ background:#28502f; color:#fff; border-radius:6px; padding:1px 8px; font-size:11px; font-weight:900; }
+  #skipHoleBtn{
+    font-family:inherit; font-weight:900; font-size:13px; letter-spacing:.5px; cursor:pointer;
+    color:#5a3d00; background:linear-gradient(180deg,#ffe27a,#ffce3d); border:none;
+    border-radius:99px; padding:9px 18px; display:inline-flex; align-items:center; gap:7px;
+    box-shadow:0 4px 0 rgba(150,110,10,.32), 0 8px 16px rgba(180,130,20,.2); transition:transform .1s;
+  }
+  #skipHoleBtn:hover{ transform:translateY(-1px); }
+  #skipHoleBtn:active{ transform:translateY(3px); box-shadow:0 1px 0 rgba(150,110,10,.32); }
   #menuBtnHud{
     font-family:inherit; font-weight:800; font-size:12.5px; letter-spacing:.5px; cursor:pointer;
     color:#3a5f6e; background:rgba(255,255,255,.7); border:none; border-radius:99px; padding:8px 16px;
@@ -1597,6 +1605,7 @@
   <div id="settingsScreen">
     <div id="settingsBox">
       <h2>SETTINGS</h2>
+      <button class="menuBtn small alt" id="settingsToMenu" style="display:none">← BACK TO MENU</button>
       <label>SOUND VOLUME <input type="range" id="sfxSlider" min="0" max="100" value="80"></label>
       <label>MUSIC VOLUME <input type="range" id="musicSlider" min="0" max="100" value="55"></label>
       <label>GRAPHICS QUALITY
@@ -1628,7 +1637,7 @@
       <div class="ctlRow"><span class="ctlAct">Green book on / off</span><span class="ctlKey"><kbd>C</kbd></span></div>
       <div class="ctlRow"><span class="ctlAct">Replay last shot</span><span class="ctlKey"><kbd>P</kbd></span></div>
       <div class="ctlRow"><span class="ctlAct">Fullscreen</span><span class="ctlKey"><kbd>F</kbd></span></div>
-      <div class="ctlRow"><span class="ctlAct">Menu</span><span class="ctlKey"><kbd>M</kbd></span></div>
+      <div class="ctlRow"><span class="ctlAct">Settings</span><span class="ctlKey"><kbd>M</kbd></span></div>
       <div class="ctlRow"><span class="ctlAct">Clubs (driving range)</span><span class="ctlKey"><kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd> <kbd>4</kbd></span></div>
 
       <button class="menuBtn small" id="controlsClose">DONE</button>
@@ -1639,7 +1648,8 @@
 
   <div id="controlsNote">
     <button id="retryBtn" title="Retry this hole (R or Start)">🔁 RETRY HOLE <span class="retryKey">R</span></button>
-    <button id="menuBtnHud" title="Menu (M)">☰ MENU</button>
+    <button id="skipHoleBtn" title="Skip ahead — you've already birdied this hole" style="display:none">SKIP HOLE ▶▶</button>
+    <button id="menuBtnHud" title="Settings (M)">⚙ SETTINGS</button>
   </div>
 </div>
 
@@ -7356,6 +7366,16 @@ function startHole(i, skipFly){
     prediction = null;
     setHint('Hole preview…');
   }
+  /* SKIP HOLE: in the single-player campaign, if you've already birdied this hole on a
+     previous visit (holeIdx < furthest birdied), let the player jump ahead instead of
+     re-birdieing holes they've cleared. They can skip one at a time up to the farthest
+     hole they still need to birdie. */
+  { const sk=document.getElementById('skipHoleBtn');
+    if(sk){
+      const cleared = (stats.holesDone && stats.holesDone[courseIdx]) || 0;
+      const canSkip = !rangeMode && !practiceMode && !(MP&&MP.on) && holeIdx < cleared && holeIdx < CH().length-1;
+      sk.style.display = canSkip ? 'inline-flex' : 'none';
+    } }
   updateHUD();
 }
 function endFlyover(){
@@ -7975,7 +7995,7 @@ window.addEventListener('keydown', e=>{
   if(e.key==='s' || e.key==='S'){ showArrows=!showArrows; if(state===ST.AIM) setHint(showArrows?'Slope arrows ON':'Slope arrows OFF'); }
   if(e.key==='c' || e.key==='C'){ greenBook=!greenBook; if(state===ST.AIM) setHint(greenBook?'Green book ON':'Green book OFF'); }
   if((e.key==='p' || e.key==='P') && state===ST.AIM) startReplay();
-  if(e.key==='m' || e.key==='M') goToMenu();
+  if(e.key==='m' || e.key==='M'){ if(!inMenu) openInGameSettings(); }
   if(e.key===' '){
     if(state===ST.FLY) endFlyover();
     else if(state===ST.REPLAY) endReplay();
@@ -9278,13 +9298,31 @@ $m('backBtn').onclick = showTours;
 { const sb=$m('statsBtnT'); if(sb) sb.onclick = showStats; }
 { const st=$m('storeBtnT'); if(st) st.onclick = showStore; }
 { const rb=$m('retryBtn'); if(rb) rb.onclick = ()=>{ if(!inMenu) startHole(holeIdx, true); }; }
-{ const mb=$m('menuBtnHud'); if(mb) mb.onclick = ()=>{ if(!inMenu) goToMenu(); }; }
+{ const mb=$m('menuBtnHud'); if(mb) mb.onclick = ()=>{ if(!inMenu) openInGameSettings(); }; }
+{ const sk=$m('skipHoleBtn'); if(sk) sk.onclick = ()=>{
+    if(inMenu || rangeMode || practiceMode || (MP&&MP.on)) return;
+    if(holeIdx < CH().length-1) startHole(holeIdx+1);   // jump to the next hole (already cleared)
+  }; }
 $m('statsBtn').onclick = showStats;
 $m('statsBack').onclick = hideStats;
 $m('storeBtn').onclick = showStore;
 $m('storeBack').onclick = hideStore;
-$m('settingsBtn').onclick = ()=>{ $m('settingsScreen').style.display='flex'; };
+/* open the settings panel from the MAIN MENU: hide the in-game "back to menu" button,
+   show RESET PROGRESS (a menu-only action) */
+$m('settingsBtn').onclick = ()=>{
+  const tm=$m('settingsToMenu'); if(tm) tm.style.display='none';
+  const rb=$m('resetBtn'); if(rb) rb.style.display='';
+  $m('settingsScreen').style.display='flex';
+};
+/* open the settings panel DURING A GAME (from the in-game ⚙ SETTINGS button):
+   show "back to menu", hide RESET PROGRESS so a live game can't be wiped by accident */
+function openInGameSettings(){
+  const tm=$m('settingsToMenu'); if(tm) tm.style.display='';
+  const rb=$m('resetBtn'); if(rb) rb.style.display='none';
+  $m('settingsScreen').style.display='flex';
+}
 $m('settingsClose').onclick = ()=>{ $m('settingsScreen').style.display='none'; };
+$m('settingsToMenu') && ($m('settingsToMenu').onclick = ()=>{ $m('settingsScreen').style.display='none'; goToMenu(); });
 $m('controlsBtn') && ($m('controlsBtn').onclick = ()=>{ $m('controlsScreen').style.display='flex'; });
 $m('controlsClose') && ($m('controlsClose').onclick = ()=>{ $m('controlsScreen').style.display='none'; });
 $m('sfxSlider').oninput = e=>{ SET.sfx = e.target.value/100; saveProgress(); };
