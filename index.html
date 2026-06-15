@@ -8824,8 +8824,8 @@ const NET = (function(){
   function on(ev, fn){ handlers[ev] = fn; }
   function emit(ev, data){ if(handlers[ev]) handlers[ev](data); }
 
-  /* ---- Multiplayer server host (Cloudflare Worker, live). ---- */
-  const PARTY_HOST = 'birdie-blitz.benjaminmcbell.workers.dev';
+  /* ---- Multiplayer server host (Render, live). ---- */
+  const PARTY_HOST = 'birdie-blitz-server.onrender.com';
 
   function code4(){ return String(Math.floor(1000 + Math.random()*9000)); }
 
