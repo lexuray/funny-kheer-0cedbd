@@ -4040,6 +4040,16 @@ function updateGreenCamBtn(){
   b.style.display = (canGreenRead() || greenCam.on) ? 'inline-flex' : 'none';
 }
 
+/* convert a #rrggbb (or #rgb) color to an rgba() string at the given alpha */
+function rgbaFrom(col, a){
+  if(typeof col!=='string') return `rgba(16,28,22,${a})`;
+  let h = col.trim();
+  if(h[0]==='#') h = h.slice(1);
+  if(h.length===3) h = h.split('').map(c=>c+c).join('');
+  if(h.length<6) return `rgba(16,28,22,${a})`;
+  const r=parseInt(h.slice(0,2),16), g=parseInt(h.slice(2,4),16), b=parseInt(h.slice(4,6),16);
+  return `rgba(${r},${g},${b},${a})`;
+}
 function lerpAngle(a,b,t){
   let d=b-a;
   while(d> Math.PI) d-=Math.PI*2;
@@ -5913,13 +5923,15 @@ function draw(now){
   }
 
   /* wedge/iron/driver shot preview */
-  if(prediction && (state===ST.AIM || state===ST.PULL)){
+  if(prediction && (state===ST.AIM || state===ST.PULL || (greenCam && greenCam.on))){
     const P = prediction;
     if(P.puttPath){
       /* bright yellow putting guide: shows the break path, no end markers */
-      const reveal = state===ST.PULL
-        ? Math.min(1, 0.15 + pullPower/100*0.95)
-        : 0.35;
+      const reveal = (greenCam && greenCam.on)
+        ? 1                                          // reading the green: show the FULL break path
+        : (state===ST.PULL
+            ? Math.min(1, 0.15 + pullPower/100*0.95)
+            : 0.35);
       const n = Math.max(2, Math.round(P.puttPath.length*reveal));
       const path = P.puttPath.slice(0, n);
       const chunks=[[0,Math.floor(n/3),1],[Math.floor(n/3),Math.floor(2*n/3),0.7],[Math.floor(2*n/3),n,0.42]];
@@ -6201,22 +6213,27 @@ function draw(now){
         ctx.globalAlpha = 1;
         // thin seat-colored ring so you can still tell players apart at a glance
         ctx.lineWidth = Math.max(1, r*0.20); ctx.strokeStyle = pl.color || 'rgba(255,255,255,.85)'; ctx.stroke();
-        // NAME tag above the ball when reasonably close (their entered name, not "P3")
+        // NAME tag above the ball when reasonably close (their entered name, not "P3").
+        // Each player's tag is tinted with THEIR color, semi-transparent so it floats lightly.
         if(sp.z < 680){
           const label = (pl.name || ('Player '+((pl.seat!=null?pl.seat:pi)+1))).slice(0, 12);
-          ctx.font = `800 ${Math.max(8, r*1.25)}px system-ui,sans-serif`;
+          ctx.font = `800 ${Math.max(8, r*1.15)}px system-ui,sans-serif`;
           ctx.textAlign='center'; ctx.textBaseline='middle';
-          const padX = Math.max(5, r*0.7);
+          const padX = Math.max(5, r*0.65);
           const tw = ctx.measureText(label).width;
-          const boxW = tw + padX*2, boxH = Math.max(12, r*1.7);
-          const boxY = sp.y - r*3.0;
-          ctx.fillStyle='rgba(16,28,22,.82)';
-          ctx.beginPath(); ctx.roundRect(sp.x - boxW/2, boxY, boxW, boxH, boxH*0.32); ctx.fill();
-          // a small color dot + the name
-          ctx.fillStyle = pl.color || '#fff';
-          ctx.beginPath(); ctx.arc(sp.x - boxW/2 + padX*0.6, boxY + boxH/2, Math.max(2, r*0.32), 0, Math.PI*2); ctx.fill();
-          ctx.fillStyle = '#eef6f0';
-          ctx.fillText(label, sp.x + padX*0.3, boxY + boxH/2);
+          const boxW = tw + padX*2, boxH = Math.max(11, r*1.55);
+          const boxY = sp.y - r*2.9;
+          // translucent tint from the player's seat color (falls back to dark)
+          const tint = (typeof rgbaFrom==='function') ? rgbaFrom(pl.color, 0.42) : 'rgba(16,28,22,.42)';
+          ctx.globalAlpha = 1;
+          ctx.fillStyle = tint;
+          ctx.beginPath(); ctx.roundRect(sp.x - boxW/2, boxY, boxW, boxH, boxH*0.34); ctx.fill();
+          // soft seat-colored hairline so each tag reads as that player's
+          ctx.lineWidth = 1; ctx.strokeStyle = (typeof rgbaFrom==='function') ? rgbaFrom(pl.color, 0.55) : 'rgba(255,255,255,.3)';
+          ctx.beginPath(); ctx.roundRect(sp.x - boxW/2, boxY, boxW, boxH, boxH*0.34); ctx.stroke();
+          // the name, slightly translucent white for a lighter look
+          ctx.fillStyle = 'rgba(255,255,255,.92)';
+          ctx.fillText(label, sp.x, boxY + boxH/2);
           ctx.textAlign='start'; ctx.textBaseline='alphabetic';
         }
       }});
@@ -7996,7 +8013,7 @@ function showBanner(text,color){
   bannerTimer=setTimeout(()=>b.classList.remove('show'), 1100);
 }
 function refreshPrediction(){
-  if(state===ST.AIM) prediction = predictShot(clubIdx===3 ? 62 : 78);
+  if(state===ST.AIM || (greenCam && greenCam.on)) prediction = predictShot(clubIdx===3 ? 62 : 78);
   else if(state===ST.PULL) prediction = predictShot(Math.max(clubIdx===3 ? pullPower : powerCurve(pullPower), 8));
 }
 
@@ -8124,6 +8141,7 @@ function frame(now){
   if(state!==ST.REPLAY && state!==ST.FLY) physics(dt*timeScale);
   updateCamera(dt);
   if(typeof updateGreenCamBtn==='function') updateGreenCamBtn();   // show READ GREEN only while putting
+  if(greenCam && greenCam.on && clubIdx===3) refreshPrediction();  // keep the read line live while looking around
 
   if(rollGain){
     const sp = (!ball.air && ball.moving && state===ST.MOVING) ? Math.hypot(ball.vx,ball.vy) : 0;
@@ -9096,10 +9114,9 @@ function mpLoadPlayer(idx){
       try{ SFX.yourTurn && SFX.yourTurn(); }catch(e){}   // audible alert: you're up
       mpArmClock();
     } else {
-      // not my turn: stop my clock and show a neutral "waiting" dash so the number
-      // doesn't sit frozen on the previous player's count
+      // not my turn: stop my clock and show a neutral "waiting" dash
       clearInterval(MP.clockTimer);
-      { const c=$m('mpClock'); if(c){ c.textContent='–'; c.classList.remove('low'); } }
+      { const c=$m('mpClock'); if(c){ c.textContent='–'; c.classList.remove('low','danger'); } }
       setHint(p.name + ' is playing…');
       // in local mock mode, ask the mock transport to produce this seat's shot
       if(NET.mode==='local' && p.seat!==MP.mySeat){
@@ -9749,38 +9766,71 @@ const NET = (function(){
      advance the turn. We send the resolved resting position so flight outcome
      is identical everywhere with no random divergence.
      ========================================================================= */
+  /* ============================================================================
+     NETCODE (clean model). Authoritative & simple:
+       • The SHOOTER resolves their shot locally, then broadcasts ONCE, immediately:
+         { seat, n, launch, rest, strokes, holed, penalty }
+         - n  = per-seat shot counter (cheap dedupe; no timers, no retries)
+         - launch = how to animate the flight (cosmetic on spectators)
+         - rest/holed/penalty = the AUTHORITATIVE outcome (always wins)
+       • SPECTATORS replay the flight for smoothness, but the replay NEVER decides
+         holed/water — when it settles we apply the authoritative outcome and advance.
+       • A water penalty keeps the same player on turn (penalty:true → no advance).
+     This removes the retry/watchdog/dual-broadcast layers that caused lag & glitches.
+     ============================================================================ */
   window.MP_broadcastResolvedShot = function(seat, ball, strokes, holed, penalty){
     if(!(MP && MP.online)) return;
     const mine = MP.mySeats ? MP.mySeats.has(seat) : (seat === MP.mySeat);
-    if(!mine) return;                              // only broadcast my own seats' shots
+    if(!mine) return;                              // only broadcast seats THIS device controls
     const launch = MP._pendingShot || null;
     MP._pendingShot = null;
+    MP._sentN = MP._sentN || {};
+    const n = (MP._sentN[seat] = (MP._sentN[seat]||0) + 1);
     NET.sendShot({
-      seat,
-      launch,                                       // exact launch → remote animates the flight
-      rest: { x:ball.x, y:ball.y, z:0 },            // authoritative landing → correct after flight
+      seat, n,
+      launch,                                       // animate the flight on spectators (cosmetic)
+      rest: { x:ball.x, y:ball.y, z:0 },            // AUTHORITATIVE resting spot
       strokes, holed: !!holed, penalty: !!penalty
     });
   };
 
-  // apply an incoming shot from another player
+  // apply an incoming shot from another player's device
   function applyRemoteShot(evt){
     if(!(MP && MP.online)) return;
     const seat = evt.seat;
     const ownSeat = MP.mySeats ? MP.mySeats.has(seat) : (seat === MP.mySeat);
-    if(ownSeat) return;                            // ignore echoes of seats THIS device controls
+    if(ownSeat) return;                            // ignore echoes of seats we control
     const p = MP.players.find(pl=>pl.seat===seat); if(!p) return;
-    // 'auto' (mock bot) sends power/angle — resolve through the engine for a real animation;
-    // 'rest' (real peers) carries the resolved resting spot — snap the seat's ball there.
+    // DEDUPE: per-seat monotonic counter. Ignore anything we've already applied or older.
+    if(evt.n != null){
+      MP._recvN = MP._recvN || {};
+      if(MP._recvN[seat] != null && evt.n <= MP._recvN[seat]) return;
+      MP._recvN[seat] = evt.n;
+    }
+    // mock-bot path (local testing): power/angle → drive a real fired shot
     if(evt.kind==='auto' && MP.turn===idxOfSeat(seat)){
-      // drive the live ball with a fired shot so everyone sees motion, then it resolves normally
       aimAngle = evt.angle; spin=0; shape=0; pullShape=0;
       if(typeof fireShotWithPower==='function') fireShotWithPower(evt.power);
       return;
     }
-    if(evt.launch && MP.turn === idxOfSeat(seat)){
-      // SPECTATE: replay the actual flight on the live ball so you watch their shot, then
-      // snap to the authoritative resting spot when it settles (no physics divergence).
+    // AUTHORITATIVE TURN SYNC: a shot arriving for a seat means that seat was the active player
+    // on the shooter's device. If our turn pointer drifted (a dropped earlier message), snap it
+    // to this seat so we still SHOW the shot and recover — this is what fixes "missing shots".
+    const seatIdx = idxOfSeat(seat);
+    if(seatIdx>=0 && MP.turn !== seatIdx && !MP.players[seatIdx].holed){
+      MP.turn = seatIdx;
+      MP._inputLocked = !(MP.mySeats ? MP.mySeats.has(seat) : (seat===MP.mySeat));
+      if(typeof mpShowTurn==='function') mpShowTurn();
+    }
+    const isTheirTurn = (MP.turn === idxOfSeat(seat));
+    // store the authoritative outcome on the player regardless of replay
+    const applyAuthoritative = ()=>{
+      p.ball = Object.assign(p.ball||{}, { x:evt.rest.x, y:evt.rest.y, z:0, vx:0,vy:0,vz:0, air:false, moving:false });
+      p.strokes = evt.strokes; p.holed = !!evt.holed;
+      if(evt.holed) p.holeStrokes = evt.strokes;
+    };
+    // SMOOTH FLIGHT: replay the shot visually, then snap to the authoritative rest on settle.
+    if(evt.launch && isTheirTurn && !evt.penalty){
       const L = evt.launch;
       ball = p.ball;
       ball.x = L.from.x; ball.y = L.from.y; ball.z = 0;
@@ -9790,48 +9840,45 @@ const NET = (function(){
       lastSafe = { x:L.from.x, y:L.from.y };
       strokes = evt.strokes;
       state = ST.MOVING;
+      // the replay is cosmetic; this is what actually resolves the turn when it settles
       MP._remoteCorrect = { seat, rest:evt.rest, strokes:evt.strokes, holed:!!evt.holed };
       if(typeof mpRenderBoard==='function') mpRenderBoard();
       return;
     }
-    if(evt.rest){
-      p.ball = Object.assign(p.ball||{}, { x:evt.rest.x, y:evt.rest.y, z:0, vx:0,vy:0,vz:0, air:false, moving:false });
-      p.strokes = evt.strokes; p.holed = !!evt.holed;
-      if(evt.holed) p.holeStrokes = evt.strokes;
-      // WATER PENALTY: the same player keeps shooting — snap their ball to the safe spot,
-      // show the splash banner, but do NOT advance the turn. Clear any stale replay state.
-      if(evt.penalty){
-        MP._remoteCorrect = null;                  // cancel any in-progress flight replay
-        if(MP.turn === idxOfSeat(seat)){ ball = p.ball; strokes = p.strokes; state = ST.AIM; ball.moving=false; ball.air=false; }
-        showBanner('SPLASH! +1', '#54bdf0');
-        if(typeof mpRenderBoard==='function') mpRenderBoard();
-        return;
-      }
-      // if it's currently this seat's turn locally, resolve the turn forward
-      if(MP.turn === idxOfSeat(seat)){
-        ball = p.ball; strokes = p.strokes;
-        if(typeof mpRenderBoard==='function') mpRenderBoard();
-        advanceAfterRemote(evt.holed);
-      } else {
-        if(typeof mpRenderBoard==='function') mpRenderBoard();
-      }
+    // WATER PENALTY: same player keeps shooting — snap ball, splash, do NOT advance.
+    if(evt.penalty){
+      MP._remoteCorrect = null;                    // cancel any cosmetic replay in progress
+      applyAuthoritative();
+      if(isTheirTurn){ ball = p.ball; strokes = p.strokes; state = ST.AIM; }
+      showBanner('SPLASH! +1', '#54bdf0');
+      if(typeof mpRenderBoard==='function') mpRenderBoard();
+      return;
+    }
+    // NO-LAUNCH path (or not their turn yet): snap authoritative, advance if it's their turn.
+    applyAuthoritative();
+    if(isTheirTurn){
+      ball = p.ball; strokes = p.strokes;
+      if(typeof mpRenderBoard==='function') mpRenderBoard();
+      advanceAfterRemote(evt.holed);
+    } else {
+      if(typeof mpRenderBoard==='function') mpRenderBoard();
     }
   }
   function idxOfSeat(seat){ return MP.players.findIndex(p=>p.seat===seat); }
 
-  // mirror of mpAfterShot's advance, used when a remote seat's shot lands
+  // advance the turn after a remote seat's shot resolves (deterministic, same as local)
   function advanceAfterRemote(wasHoled){
     clearInterval(MP.clockTimer);
     if(MP.players.every(pl=>pl.holed)){
       MP.players.forEach(pl=>{ pl.totalPrev = (pl.totalPrev||0)+pl.holeStrokes; });
-      setTimeout(()=>mpHoleComplete(), 700);
+      setTimeout(()=>mpHoleComplete(), 600);
       return;
     }
     setTimeout(()=>{
       let next = MP.turn;
       do { next = (next+1)%MP.players.length; } while(MP.players[next].holed);
       mpLoadPlayer(next);
-    }, 600);
+    }, 500);
   }
   window.MP_advanceAfterRemote = advanceAfterRemote;
   window.MP_applyRemoteShot = applyRemoteShot;
