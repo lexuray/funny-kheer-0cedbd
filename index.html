@@ -8527,7 +8527,7 @@ function csPetalLoop(ts){
 function showMenu(){
   inMenu = true;
   if(greenCam){ greenCam.on = false; const dr=$m('greenReadHud'); if(dr) dr.style.display='none'; const gb=$m('greenCamBtn'); if(gb){ gb.classList.remove('on'); gb.style.display='none'; } }
-  if(MP){ clearInterval(MP.clockTimer); MP=null; }
+  if(MP){ clearInterval(MP.clockTimer); clearInterval(MP._turnBeat); MP=null; }
   { const h=$m('mpHud'); if(h) h.style.display='none'; const sb=$m('mpBoard'); if(sb) sb.classList.remove('show'); const sp=$m('skinPot'); if(sp) sp.classList.remove('show'); }
   $m('menuScreen').style.display='flex';
   $m('courseScreen').style.display='none';
@@ -8958,7 +8958,7 @@ function showCourses(){
 function enterWarmup(){
   practiceMode = true;
   rangeMode = true;
-  if(MP){ clearInterval(MP.clockTimer); MP=null; }
+  if(MP){ clearInterval(MP.clockTimer); clearInterval(MP._turnBeat); MP=null; }
   { const h=$m('mpHud'); if(h) h.style.display='none'; const sb=$m('mpBoard'); if(sb) sb.classList.remove('show'); const sp=$m('skinPot'); if(sp) sp.classList.remove('show'); }
   courseIdx = PRACTICE_CI;
   inMenu = false;
@@ -8978,7 +8978,7 @@ function enterGame(ci){
   if(!courseUnlocked(ci)) return;
   practiceMode = false;
   rangeMode = false;
-  if(MP){ clearInterval(MP.clockTimer); MP=null; }
+  if(MP){ clearInterval(MP.clockTimer); clearInterval(MP._turnBeat); MP=null; }
   { const h=$m('mpHud'); if(h) h.style.display='none'; const sb=$m('mpBoard'); if(sb) sb.classList.remove('show'); const sp=$m('skinPot'); if(sp) sp.classList.remove('show'); }
   courseIdx = ci;
   inMenu = false;
@@ -9209,13 +9209,61 @@ function mpAfterShot(wasHoled){
     setTimeout(()=>mpHoleComplete(), 800);
     return;
   }
-  // advance to the next player who hasn't holed out
-  setTimeout(()=>{
-    let next = MP.turn;
-    do { next = (next+1)%MP.players.length; } while(MP.players[next].holed);
-    mpLoadPlayer(next);
-  }, 700);
+  // TURN ADVANCE. Online: only the HOST decides the next turn and broadcasts it; non-hosts
+  // wait for that authoritative 'turn' message (prevents split-brain freezes). Offline/local:
+  // advance directly.
+  if(MP.online){
+    if(MP.isHost){ setTimeout(()=>mpHostAdvance(), 700); }
+    // non-host: do nothing — the host will tell us whose turn is next via onTurn
+  } else {
+    setTimeout(()=>{
+      let next = MP.turn;
+      do { next = (next+1)%MP.players.length; } while(MP.players[next].holed);
+      mpLoadPlayer(next);
+    }, 700);
+  }
 }
+
+/* HOST ONLY: compute the next turn, broadcast it to everyone, and apply it locally.
+   This is the single source of truth for whose turn it is in an online match. */
+function mpHostAdvance(){
+  if(!(MP && MP.online && MP.isHost)) return;
+  if(MP.players.every(pl=>pl.holed)){
+    MP.players.forEach(pl=>{ pl.totalPrev = (pl.totalPrev||0)+pl.holeStrokes; });
+    mpHoleComplete();
+    return;
+  }
+  let next = MP.turn;
+  do { next = (next+1)%MP.players.length; } while(MP.players[next].holed);
+  // tell everyone (and ourselves) the authoritative next turn
+  MP._turnSeq = (MP._turnSeq||0) + 1;
+  try{ NET.sendTurn && NET.sendTurn({ turnSeat: MP.players[next].seat, holeIdx: MP.holeIdx, seq: MP._turnSeq }); }catch(e){}
+  mpLoadPlayer(next);
+}
+
+/* apply an authoritative turn message from the host (non-host clients) */
+function mpApplyTurn(evt){
+  if(!(MP && MP.online)) return;
+  if(MP.isHost) return;                       // host already advanced locally; ignore echoes
+  if(evt.seq!=null){ if(MP._turnSeqSeen!=null && evt.seq<=MP._turnSeqSeen) return; MP._turnSeqSeen = evt.seq; }
+  if(evt.holeIdx!=null && evt.holeIdx!==MP.holeIdx) return;   // stale hole
+  const idx = MP.players.findIndex(p=>p.seat===evt.turnSeat);
+  if(idx<0) return;
+  if(MP.turn===idx && !MP._inputLocked===MP.mySeats.has(evt.turnSeat)){
+    // already on this turn with correct lock state — a heartbeat, nothing to do (avoids
+    // re-playing the your-turn sound / resetting the clock every few seconds)
+    return;
+  }
+  if(MP.turn===idx){
+    // same turn index but maybe our lock drifted — just fix the lock, don't reload
+    MP._inputLocked = !(MP.mySeats ? MP.mySeats.has(evt.turnSeat) : (evt.turnSeat===MP.mySeat));
+    return;
+  }
+  MP._remoteCorrect = null;                   // any cosmetic replay is done; this is authoritative
+  mpLoadPlayer(idx);
+}
+window.MP_applyTurn = mpApplyTurn;
+window.MP_hostAdvance = mpHostAdvance;
 
 function mpHoleComplete(){
   // Calculate match play points if in match play mode
@@ -9465,6 +9513,7 @@ const NET = (function(){
         // schedule the mock friends' shots when it's their turn (handled by game loop).
       },
       sendHole(evt){},
+      sendTurn(evt){ /* mock: single device, turn handled locally */ },
       sendChat(t){ emit('onChat', { from:me.name, text:t }); },
       // the game asks the mock to produce a remote seat's shot
       requestBotShot(seat, ball, pin){
@@ -9494,6 +9543,7 @@ const NET = (function(){
           case 'open':    room.code = code; emit('onOpen', { code }); break;
           case 'start':   room.open=false; emit('onStart', msg); break;
           case 'shot':    emit('onShot', msg); break;
+          case 'turn':    emit('onTurn', msg); break;
           case 'hole':    emit('onHole', msg); break;
           case 'chat':    emit('onChat', msg); break;
           case 'left':    emit('onPlayers', msg.players); break;
@@ -9516,6 +9566,7 @@ const NET = (function(){
       setReady(r){ send({ t:'ready', ready:r!==false }); },
       start(settings){ send({ t:'start', settings }); },
       sendShot(evt){ send(Object.assign({ t:'shot' }, evt)); },
+      sendTurn(evt){ send(Object.assign({ t:'turn' }, evt)); },
       sendHole(evt){ send(Object.assign({ t:'hole' }, evt)); },
       sendChat(text){ send({ t:'chat', from:me.name, text }); },
       requestBotShot(){ /* no bots online */ },
@@ -9538,6 +9589,7 @@ const NET = (function(){
     join(code, name){ return this.t.joinLobby(code, name); },
     start(settings){ return this.t.start(settings); },
     sendShot(evt){ return this.t.sendShot(evt); },
+    sendTurn(evt){ return this.t.sendTurn && this.t.sendTurn(evt); },
     sendHole(evt){ return this.t.sendHole(evt); },
     addMockFriend(){ return this.t.addMockFriend && this.t.addMockFriend(); },
     requestBotShot(seat, ball, pin){ return this.t.requestBotShot && this.t.requestBotShot(seat, ball, pin); },
@@ -9562,6 +9614,7 @@ const NET = (function(){
     NET.on('onPlayers', (players)=>{ lobbyState.players = players; renderLobby(); });
     NET.on('onStart', (d)=>{ launchOnlineMatch(d); });
     NET.on('onShot', (evt)=>{ applyRemoteShot(evt); });
+    NET.on('onTurn', (evt)=>{ mpApplyTurn(evt); });
     NET.on('onChat', (m)=>{ pushLobbyChat(m.from, m.text); });
     NET.on('onClose', ()=>{ if(lobbyState.open){ setLobbyHint('Connection closed.'); } });
     NET.on('onError', (e)=>{ setLobbyHint(e.message || 'Network error.'); });
@@ -9748,7 +9801,11 @@ const NET = (function(){
     // which seats does THIS device control? my own seat, plus any local players I own (host).
     const mySeats = new Set([NET.me.seat]);
     if(hostSeat===NET.me.seat){ players.forEach(p=>{ if(p.local) mySeats.add(p.seat); }); }
-    MP = { on:true, online:true, mySeat: NET.me.seat, mySeats, mode:'ffa', scoreMode:sMode,
+    // TURN AUTHORITY: the host owns the turn order and broadcasts it; everyone else obeys.
+    // hostSeat comes from the start settings; fall back to the lowest seat present.
+    const authSeat = (hostSeat!=null) ? hostSeat : Math.min(...players.map(p=>p.seat));
+    const isHost = (NET.me.seat === authSeat);
+    MP = { on:true, online:true, mySeat: NET.me.seat, mySeats, isHost, authSeat, mode:'ffa', scoreMode:sMode,
            courseIdx: settings.courseIdx||0, players, turn:0, holeIdx:0, deadline:0, clockTimer:null, skinPot:1 };
     practiceMode=false; rangeMode=false; courseIdx = MP.courseIdx; inMenu=false;
     lobbyState.open=false;
@@ -9758,6 +9815,18 @@ const NET = (function(){
     { const nb=$m('nextHoleBtn'); if(nb) nb.style.display='none'; }
     sizeCanvas(); ac(); startMusic();
     mpStartHole(0);
+    // HOST TURN HEARTBEAT: every few seconds the host re-broadcasts the current authoritative
+    // turn. If a turn message was ever dropped, a drifted client resyncs within seconds — so a
+    // split-brain freeze can't persist. Cheap (one tiny message) and only the host sends it.
+    if(MP && MP.isHost){
+      clearInterval(MP._turnBeat);
+      MP._turnBeat = setInterval(()=>{
+        if(!(MP && MP.online && MP.isHost)) return;
+        const cur = MP.players[MP.turn]; if(!cur) return;
+        MP._turnSeq = (MP._turnSeq||0) + 1;
+        try{ NET.sendTurn && NET.sendTurn({ turnSeat: cur.seat, holeIdx: MP.holeIdx, seq: MP._turnSeq, beat:true }); }catch(e){}
+      }, 4000);
+    }
   }
 
   /* =========================================================================
@@ -9866,19 +9935,14 @@ const NET = (function(){
   }
   function idxOfSeat(seat){ return MP.players.findIndex(p=>p.seat===seat); }
 
-  // advance the turn after a remote seat's shot resolves (deterministic, same as local)
+  // a remote seat's shot resolved on a spectator. Only the HOST advances + broadcasts the
+  // turn; non-hosts wait for the authoritative 'turn' message. This kills split-brain freezes.
   function advanceAfterRemote(wasHoled){
     clearInterval(MP.clockTimer);
-    if(MP.players.every(pl=>pl.holed)){
-      MP.players.forEach(pl=>{ pl.totalPrev = (pl.totalPrev||0)+pl.holeStrokes; });
-      setTimeout(()=>mpHoleComplete(), 600);
-      return;
+    if(MP.isHost){
+      setTimeout(()=>mpHostAdvance(), 500);
     }
-    setTimeout(()=>{
-      let next = MP.turn;
-      do { next = (next+1)%MP.players.length; } while(MP.players[next].holed);
-      mpLoadPlayer(next);
-    }, 500);
+    // non-host: do nothing — wait for onTurn from the host
   }
   window.MP_advanceAfterRemote = advanceAfterRemote;
   window.MP_applyRemoteShot = applyRemoteShot;
