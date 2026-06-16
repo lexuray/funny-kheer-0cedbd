@@ -9445,13 +9445,46 @@ const NET = (function(){
      ========================================================================= */
   function makePartyTransport(){
     let ws = null;
-    function connect(code){
+    let wantConnected = false;     // are we trying to stay connected (vs intentionally closed)?
+    let curCode = null;            // the room we belong to, so we can rejoin after a drop
+    let reconnectTimer = null;
+    let reconnectTries = 0;
+    let pingTimer = null;
+    let everConnected = false;     // have we successfully connected at least once?
+
+    function startPing(){
+      clearInterval(pingTimer);
+      // a tiny keepalive every 20s keeps the socket (and the free-tier instance) from idling out
+      pingTimer = setInterval(()=>{
+        if(ws && ws.readyState===1){ try{ ws.send(JSON.stringify({ t:'ping' })); }catch(e){} }
+      }, 20000);
+    }
+    function scheduleReconnect(){
+      if(!wantConnected) return;
+      clearTimeout(reconnectTimer);
+      reconnectTries++;
+      // back off a little each time, but cap it so we keep trying ~every few seconds
+      const delay = Math.min(800 + reconnectTries*600, 4000);
+      emit('onNetStatus', { state:'reconnecting', tries:reconnectTries });
+      reconnectTimer = setTimeout(()=>{ if(wantConnected) openSocket(curCode); }, delay);
+    }
+    function openSocket(code){
+      curCode = code;
       const proto = location.protocol==='https:' ? 'wss' : 'ws';
-      ws = new WebSocket(`${proto}://${PARTY_HOST}/room/${code}`);
-      ws.onopen = ()=> ws.send(JSON.stringify({ t:'hello', name:me.name, host:me.host }));
+      try{ ws = new WebSocket(`${proto}://${PARTY_HOST}/room/${code}`); }
+      catch(e){ scheduleReconnect(); return; }
+      ws.onopen = ()=>{
+        reconnectTries = 0;
+        everConnected = true;
+        // (re)introduce ourselves so the server seats us / keeps our seat after a reconnect
+        try{ ws.send(JSON.stringify({ t:'hello', name:me.name, host:me.host, rejoin:true, seat:me.seat })); }catch(e){}
+        startPing();
+        emit('onNetStatus', { state:'connected' });
+      };
       ws.onmessage = (m)=>{
         let msg; try{ msg = JSON.parse(m.data); }catch{ return; }
         switch(msg.t){
+          case 'pong':    break;   // keepalive ack
           case 'players': room.players = msg.players; if(msg.you!==undefined && msg.you!==null) me.seat = msg.you; emit('onPlayers', msg.players); break;
           case 'open':    room.code = code; emit('onOpen', { code }); break;
           case 'start':   room.open=false; emit('onStart', msg); break;
@@ -9462,10 +9495,26 @@ const NET = (function(){
           case 'error':   emit('onError', msg); break;
         }
       };
-      ws.onclose = ()=> emit('onClose', {});
-      ws.onerror = (e)=> emit('onError', { message:'connection error' });
+      ws.onclose = ()=>{
+        clearInterval(pingTimer);
+        if(wantConnected){
+          // unexpected drop during a game → auto-reconnect to the same room
+          scheduleReconnect();
+        } else {
+          emit('onClose', {});
+        }
+      };
+      ws.onerror = (e)=>{ /* onclose will follow and trigger reconnect */ };
     }
-    const send = (o)=>{ if(ws && ws.readyState===1) ws.send(JSON.stringify(o)); };
+    function connect(code){
+      wantConnected = true;
+      reconnectTries = 0;
+      openSocket(code);
+    }
+    const send = (o)=>{
+      if(ws && ws.readyState===1){ try{ ws.send(JSON.stringify(o)); }catch(e){} }
+      // if not open, the message is dropped — but reconnection + the host's state will resync.
+    };
     return {
       kind:'party',
       createLobby(name, settings){
@@ -9481,7 +9530,7 @@ const NET = (function(){
       sendHole(evt){ send(Object.assign({ t:'hole' }, evt)); },
       sendChat(text){ send({ t:'chat', from:me.name, text }); },
       requestBotShot(){ /* no bots online */ },
-      close(){ try{ ws && ws.close(); }catch{} }
+      close(){ wantConnected=false; clearTimeout(reconnectTimer); clearInterval(pingTimer); try{ ws && ws.close(); }catch{} }
     };
   }
 
@@ -9527,6 +9576,16 @@ const NET = (function(){
     NET.on('onChat', (m)=>{ pushLobbyChat(m.from, m.text); });
     NET.on('onClose', ()=>{ if(lobbyState.open){ setLobbyHint('Connection closed.'); } });
     NET.on('onError', (e)=>{ setLobbyHint(e.message || 'Network error.'); });
+    NET.on('onNetStatus', (s)=>{
+      // show a clear status during a drop/reconnect instead of a silent freeze
+      if(s.state==='reconnecting'){
+        if(MP && MP.on){ try{ showBanner('Reconnecting…', '#ffd84d'); }catch(e){} }
+        if(lobbyState.open) setLobbyHint('Reconnecting…');
+      } else if(s.state==='connected'){
+        if(MP && MP.on){ try{ showBanner('Back online', '#7ed957'); }catch(e){} }
+        if(lobbyState.open) setLobbyHint('');
+      }
+    });
   }
 
   // --- lobby state shown in the waiting room ---
