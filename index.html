@@ -2036,6 +2036,15 @@ let POLY, SHADE_CELLS, CONTOUR_SEGS, ARROWS, BLOTCH, TUFTS, SAND_DOTS;
 
 /* ============================ GEOMETRY ============================ */
 function dist(ax,ay,bx,by){ return Math.hypot(ax-bx, ay-by); }
+/* convert a #rrggbb (or #rgb) color to an rgba() string at the given alpha */
+function rgbaFrom(col, a){
+  if(typeof col!=='string') return `rgba(16,28,22,${a})`;
+  let h = col.trim(); if(h[0]==='#') h = h.slice(1);
+  if(h.length===3) h = h.split('').map(c=>c+c).join('');
+  if(h.length<6) return `rgba(16,28,22,${a})`;
+  const r=parseInt(h.slice(0,2),16), g=parseInt(h.slice(2,4),16), b=parseInt(h.slice(4,6),16);
+  return `rgba(${r},${g},${b},${a})`;
+}
 function distToSegment(px,py,ax,ay,bx,by){
   const dx=bx-ax, dy=by-ay, L2=dx*dx+dy*dy;
   let t = L2 ? ((px-ax)*dx+(py-ay)*dy)/L2 : 0;
@@ -6358,6 +6367,31 @@ function draw(now){
         }
       }
     }});
+    /* ONLINE: float the ACTIVE shooter's name above the live ball so everyone (including at
+       the tee box) can see who is shooting right now. */
+    if(MP && MP.on && MP.online && MP.players && MP.players[MP.turn] && sb){
+      const who = MP.players[MP.turn];
+      const nm = (who.name||('Player '+((who.seat!=null?who.seat:0)+1))).slice(0,12);
+      const col = who.color || '#ffd84d';
+      bills.push({ z: sb.z-0.01, draw:()=>{
+        const r = Math.max(2.4, cam.foc*4.5/sb.z);
+        ctx.font = `800 ${Math.max(9, r*1.25)}px system-ui,sans-serif`;
+        ctx.textAlign='center'; ctx.textBaseline='middle';
+        const padX = Math.max(6, r*0.8), tw = ctx.measureText(nm).width;
+        const boxW = tw + padX*2, boxH = Math.max(13, r*1.8), boxY = sb.y - r*4.2;
+        // translucent tinted tag in the shooter's color
+        ctx.fillStyle = (typeof rgbaFrom==='function') ? rgbaFrom(col,0.5) : 'rgba(16,28,22,.6)';
+        ctx.beginPath(); ctx.roundRect(sb.x-boxW/2, boxY, boxW, boxH, boxH*0.34); ctx.fill();
+        ctx.lineWidth=1; ctx.strokeStyle=(typeof rgbaFrom==='function')?rgbaFrom(col,0.7):'rgba(255,255,255,.4)';
+        ctx.beginPath(); ctx.roundRect(sb.x-boxW/2, boxY, boxW, boxH, boxH*0.34); ctx.stroke();
+        // little down-pointer toward the ball
+        ctx.fillStyle = (typeof rgbaFrom==='function') ? rgbaFrom(col,0.5) : 'rgba(16,28,22,.6)';
+        ctx.beginPath(); ctx.moveTo(sb.x-r*0.5, boxY+boxH-1); ctx.lineTo(sb.x+r*0.5, boxY+boxH-1); ctx.lineTo(sb.x, boxY+boxH+r*0.6); ctx.closePath(); ctx.fill();
+        ctx.fillStyle='rgba(255,255,255,.95)';
+        ctx.fillText(nm, sb.x, boxY+boxH/2);
+        ctx.textAlign='start'; ctx.textBaseline='alphabetic';
+      }});
+    }
   }
   particles.forEach(p=>{
     const s = proj(p.x,p.y,p.z);
@@ -7323,6 +7357,7 @@ function finishShot(wasHoled){
     /* if this was a SPECTATED remote shot, snap to the authoritative landing the owner sent,
        then advance the turn (don't re-broadcast — we're not the owner). */
     if(MP.online && MP._remoteCorrect){
+      clearTimeout(MP._settleWatch);
       const rc = MP._remoteCorrect; MP._remoteCorrect = null;
       const p = MP.players.find(pl=>pl.seat===rc.seat);
       if(p){
@@ -7703,10 +7738,23 @@ function holed(){
   /* MULTIPLAYER SPECTATING: when we're replaying someone else's shot, our local physics must
      NOT decide the ball was holed — the shooter already told us the authoritative outcome.
      If they said it was NOT holed (just close), let the ball settle and snap to their rest. */
-  if(MP && MP.online && MP._remoteCorrect && !MP._remoteCorrect.holed){
-    ball.moving=false; ball.air=false; ball.vx=ball.vy=ball.vz=0;
+  if(MP && MP.online && MP._remoteCorrect){
+    // SPECTATING someone else's shot: our local physics must NOT decide the outcome — the
+    // shooter already told us authoritatively. Snap to their rest/holed and advance the turn.
+    // (Handles BOTH outcomes: a holed remote shot used to skip this and freeze the spectator.)
+    clearTimeout(MP._settleWatch);
+    const rc = MP._remoteCorrect; MP._remoteCorrect = null;
+    const p = MP.players.find(pl=>pl.seat===rc.seat);
+    if(p){
+      p.ball = Object.assign(p.ball||{}, { x:rc.rest.x, y:rc.rest.y, z:0, vx:0,vy:0,vz:0, air:false, moving:false });
+      p.strokes = rc.strokes; p.holed = !!rc.holed;
+      if(rc.holed) p.holeStrokes = rc.strokes;
+      ball = p.ball; strokes = rc.strokes;
+    }
+    if(rc.holed){ try{ SFX.drop && SFX.drop(); }catch(e){} showBanner((p&&p.name?p.name:'Player')+' holed out!', '#7ed957'); }
     state = ST.AIM;
-    finishShot(false);   // applies the authoritative resting spot
+    if(typeof mpRenderBoard==='function') mpRenderBoard();
+    MP_advanceAfterRemote(rc.holed);
     return;
   }
   if(rangeMode){
@@ -8489,7 +8537,7 @@ function csPetalLoop(ts){
 function showMenu(){
   inMenu = true;
   if(greenCam){ greenCam.on = false; const dr=$m('greenReadHud'); if(dr) dr.style.display='none'; const gb=$m('greenCamBtn'); if(gb){ gb.classList.remove('on'); gb.style.display='none'; } }
-  if(MP){ clearInterval(MP.clockTimer); MP=null; }
+  if(MP){ clearInterval(MP.clockTimer); clearTimeout(MP._waitWatch); clearTimeout(MP._settleWatch); MP=null; }
   { const h=$m('mpHud'); if(h) h.style.display='none'; const sb=$m('mpBoard'); if(sb) sb.classList.remove('show'); const sp=$m('skinPot'); if(sp) sp.classList.remove('show'); }
   $m('menuScreen').style.display='flex';
   $m('courseScreen').style.display='none';
@@ -8920,7 +8968,7 @@ function showCourses(){
 function enterWarmup(){
   practiceMode = true;
   rangeMode = true;
-  if(MP){ clearInterval(MP.clockTimer); MP=null; }
+  if(MP){ clearInterval(MP.clockTimer); clearTimeout(MP._waitWatch); clearTimeout(MP._settleWatch); MP=null; }
   { const h=$m('mpHud'); if(h) h.style.display='none'; const sb=$m('mpBoard'); if(sb) sb.classList.remove('show'); const sp=$m('skinPot'); if(sp) sp.classList.remove('show'); }
   courseIdx = PRACTICE_CI;
   inMenu = false;
@@ -8940,7 +8988,7 @@ function enterGame(ci){
   if(!courseUnlocked(ci)) return;
   practiceMode = false;
   rangeMode = false;
-  if(MP){ clearInterval(MP.clockTimer); MP=null; }
+  if(MP){ clearInterval(MP.clockTimer); clearTimeout(MP._waitWatch); clearTimeout(MP._settleWatch); MP=null; }
   { const h=$m('mpHud'); if(h) h.style.display='none'; const sb=$m('mpBoard'); if(sb) sb.classList.remove('show'); const sp=$m('skinPot'); if(sp) sp.classList.remove('show'); }
   courseIdx = ci;
   inMenu = false;
@@ -9080,6 +9128,17 @@ function mpLoadPlayer(idx){
       clearInterval(MP.clockTimer);
       { const c=$m('mpClock'); if(c){ c.textContent='–'; c.classList.remove('low'); } }
       setHint(p.name + ' is playing…');
+      // WAITING WATCHDOG: if a remote player's shot never arrives (a dropped final message),
+      // we'd wait forever. After a generous timeout, ask that seat to re-send its last shot.
+      // The owner answers via a normal shot message, so a single lost packet self-heals.
+      clearTimeout(MP._waitWatch);
+      const waitIdx = idx, waitSeat = p.seat;
+      MP._waitWatch = setTimeout(()=>{
+        if(MP && MP.online && MP.turn===waitIdx && MP._inputLocked){
+          try{ NET.sendShot && NET.sendShot({ t:'resync', want:waitSeat, from:MP.mySeat }); }catch(e){}
+          setHint(p.name + ' …'); // quiet status; recovery in flight
+        }
+      }, 9000);
       // in local mock mode, ask the mock transport to produce this seat's shot
       if(NET.mode==='local' && p.seat!==MP.mySeat){
         setTimeout(()=>{ if(MP && MP.turn===idx) NET.requestBotShot(p.seat, ball, PIN); }, 900);
@@ -9792,31 +9851,67 @@ const NET = (function(){
     if(!mine) return;                              // only broadcast my own seats' shots
     const launch = MP._pendingShot || null;
     MP._pendingShot = null;
+    MP._sentN = MP._sentN || {};
+    const n = (MP._sentN[seat] = (MP._sentN[seat]||0) + 1);   // per-seat shot counter
     NET.sendShot({
-      seat,
+      seat, n,
+      turn: MP.turn,                                // shooter's turn index → lets peers self-sync
       launch,                                       // exact launch → remote animates the flight
       rest: { x:ball.x, y:ball.y, z:0 },            // authoritative landing → correct after flight
       strokes, holed: !!holed, penalty: !!penalty
     });
+    // remember it so we can re-send if a peer reports they never got it (drop recovery)
+    MP._lastSent = MP._lastSent || {};
+    MP._lastSent[seat] = { seat, n, turn: MP.turn, launch:null, rest:{x:ball.x,y:ball.y,z:0}, strokes, holed:!!holed, penalty:!!penalty };
   };
 
-  // apply an incoming shot from another player
+  // apply an incoming shot from another player. SELF-HEALING: a shot for a seat means that
+  // seat was the active player on the shooter's device — so we sync our turn pointer to it
+  // before processing. This recovers automatically from any drift (the #1 cause of freezes)
+  // without needing extra turn-authority messages that can themselves get dropped.
   function applyRemoteShot(evt){
     if(!(MP && MP.online)) return;
+    // RESYNC REQUEST: a peer waiting on one of my seats never got its last shot. Re-send it.
+    if(evt.t==='resync' || evt.resync){
+      const want = evt.want;
+      const iOwn = MP.mySeats ? MP.mySeats.has(want) : (want===MP.mySeat);
+      if(iOwn && MP._lastSent && MP._lastSent[want]){
+        try{ NET.sendShot && NET.sendShot(MP._lastSent[want]); }catch(e){}
+      }
+      return;
+    }
     const seat = evt.seat;
-    if(seat === MP.mySeat) return;                 // ignore echoes of my own
+    const ownSeat = MP.mySeats ? MP.mySeats.has(seat) : (seat === MP.mySeat);
+    if(ownSeat) return;                            // ignore echoes of seats THIS device controls
     const p = MP.players.find(pl=>pl.seat===seat); if(!p) return;
-    // 'auto' (mock bot) sends power/angle — resolve through the engine for a real animation;
-    // 'rest' (real peers) carries the resolved resting spot — snap the seat's ball there.
+    // DEDUP: per-seat monotonic counter — ignore anything we've already applied or older.
+    if(evt.n != null){
+      MP._recvN = MP._recvN || {};
+      if(MP._recvN[seat] != null && evt.n <= MP._recvN[seat]) return;
+      MP._recvN[seat] = evt.n;
+    }
+    clearTimeout(MP._waitWatch);                    // a shot arrived — cancel any pending resync
+    // mock-bot path (local testing): power/angle → drive a real fired shot
     if(evt.kind==='auto' && MP.turn===idxOfSeat(seat)){
-      // drive the live ball with a fired shot so everyone sees motion, then it resolves normally
       aimAngle = evt.angle; spin=0; shape=0; pullShape=0;
       if(typeof fireShotWithPower==='function') fireShotWithPower(evt.power);
       return;
     }
-    if(evt.launch && MP.turn === idxOfSeat(seat)){
-      // SPECTATE: replay the actual flight on the live ball so you watch their shot, then
-      // snap to the authoritative resting spot when it settles (no physics divergence).
+    const seatIdx = idxOfSeat(seat);
+    // SELF-HEAL: if our turn pointer drifted (a dropped earlier message), snap it to this seat
+    // so we still SHOW the shot and recover. This fixes "missing shots" and split-brain freezes.
+    if(seatIdx>=0 && MP.turn !== seatIdx && !p.holed){
+      // abandon any half-finished spectate of a different seat
+      MP._remoteCorrect = null;
+      MP.turn = seatIdx;
+      MP._inputLocked = true;                      // it's this remote seat's turn, not ours
+      clearInterval(MP.clockTimer);
+      if(typeof mpShowTurn==='function') mpShowTurn();
+    }
+    const isTheirTurn = (MP.turn === seatIdx);
+
+    // SMOOTH FLIGHT: replay the shot, then snap to the authoritative rest on settle.
+    if(evt.launch && isTheirTurn && !evt.penalty){
       const L = evt.launch;
       ball = p.ball;
       ball.x = L.from.x; ball.y = L.from.y; ball.z = 0;
@@ -9828,31 +9923,54 @@ const NET = (function(){
       state = ST.MOVING;
       MP._remoteCorrect = { seat, rest:evt.rest, strokes:evt.strokes, holed:!!evt.holed };
       if(typeof mpRenderBoard==='function') mpRenderBoard();
+      // GUARANTEED SETTLE: the cosmetic replay must never hang the turn. If local physics
+      // doesn't cleanly settle within a hard window (stuck rolling, oscillating, or a holed
+      // ball that skips finishShot), force the authoritative snap + advance. This is the
+      // single most important anti-freeze: a spectated shot ALWAYS resolves.
+      clearTimeout(MP._settleWatch);
+      MP._settleWatch = setTimeout(()=>{ mpForceSettleRemote(); }, 6000);
       return;
     }
-    if(evt.rest){
-      p.ball = Object.assign(p.ball||{}, { x:evt.rest.x, y:evt.rest.y, z:0, vx:0,vy:0,vz:0, air:false, moving:false });
-      p.strokes = evt.strokes; p.holed = !!evt.holed;
-      if(evt.holed) p.holeStrokes = evt.strokes;
-      // WATER PENALTY: the same player keeps shooting — snap their ball to the safe spot,
-      // show the splash banner, but do NOT advance the turn.
-      if(evt.penalty){
-        if(MP.turn === idxOfSeat(seat)){ ball = p.ball; strokes = p.strokes; }
-        showBanner('SPLASH! +1', '#54bdf0');
-        if(typeof mpRenderBoard==='function') mpRenderBoard();
-        return;
-      }
-      // if it's currently this seat's turn locally, resolve the turn forward
-      if(MP.turn === idxOfSeat(seat)){
-        ball = p.ball; strokes = p.strokes;
-        if(typeof mpRenderBoard==='function') mpRenderBoard();
-        advanceAfterRemote(evt.holed);
-      } else {
-        if(typeof mpRenderBoard==='function') mpRenderBoard();
-      }
+    // store the authoritative outcome on the player
+    p.ball = Object.assign(p.ball||{}, { x:evt.rest.x, y:evt.rest.y, z:0, vx:0,vy:0,vz:0, air:false, moving:false });
+    p.strokes = evt.strokes; p.holed = !!evt.holed;
+    if(evt.holed) p.holeStrokes = evt.strokes;
+    // WATER PENALTY: same player keeps shooting — snap ball, splash, do NOT advance.
+    if(evt.penalty){
+      MP._remoteCorrect = null;
+      if(isTheirTurn){ ball = p.ball; strokes = p.strokes; state = ST.AIM; ball.moving=false; ball.air=false; }
+      showBanner('SPLASH! +1', '#54bdf0');
+      if(typeof mpRenderBoard==='function') mpRenderBoard();
+      return;
+    }
+    // NO-LAUNCH (snap) or fast-forward: apply and advance the turn.
+    if(isTheirTurn){
+      ball = p.ball; strokes = p.strokes;
+      if(typeof mpRenderBoard==='function') mpRenderBoard();
+      advanceAfterRemote(evt.holed);
+    } else {
+      if(typeof mpRenderBoard==='function') mpRenderBoard();
     }
   }
   function idxOfSeat(seat){ return MP.players.findIndex(p=>p.seat===seat); }
+
+  // FORCE a spectated remote shot to resolve, no matter what the local physics is doing.
+  // Called by the guaranteed-settle watchdog so a replay can never hang the turn.
+  function mpForceSettleRemote(){
+    if(!(MP && MP.online && MP._remoteCorrect)) return;
+    const rc = MP._remoteCorrect; MP._remoteCorrect = null;
+    const p = MP.players.find(pl=>pl.seat===rc.seat);
+    if(p){
+      p.ball = Object.assign(p.ball||{}, { x:rc.rest.x, y:rc.rest.y, z:0, vx:0,vy:0,vz:0, air:false, moving:false });
+      p.strokes = rc.strokes; p.holed = !!rc.holed;
+      if(rc.holed) p.holeStrokes = rc.strokes;
+      ball = p.ball; strokes = rc.strokes;
+    }
+    state = ST.AIM;
+    if(typeof mpRenderBoard==='function') mpRenderBoard();
+    advanceAfterRemote(rc.holed);
+  }
+  window.MP_forceSettleRemote = mpForceSettleRemote;
 
   // mirror of mpAfterShot's advance, used when a remote seat's shot lands
   function advanceAfterRemote(wasHoled){
@@ -9869,6 +9987,7 @@ const NET = (function(){
     }, 600);
   }
   window.MP_advanceAfterRemote = advanceAfterRemote;
+  window.MP_applyRemoteShot = applyRemoteShot;
 
   // ---- wire lobby UI buttons (guarded; only if elements exist) ----
   function wireLobbyButtons(){
