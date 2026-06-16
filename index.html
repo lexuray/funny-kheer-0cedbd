@@ -936,6 +936,44 @@
   .ctlKey kbd{ font-family:inherit; font-size:12px; font-weight:800; color:#27607c; background:#fff;
     border:1.5px solid #cfe3ee; border-bottom-width:3px; border-radius:6px; padding:2px 8px; min-width:14px; text-align:center; }
   #controlsBox .menuBtn{ margin-top:16px; }
+  /* ===== leaderboard screen ===== */
+  #lbScreen{
+    position:absolute; inset:0; z-index:52; display:none;
+    background:rgba(20,40,55,.45); -webkit-backdrop-filter:blur(4px); backdrop-filter:blur(4px);
+    align-items:center; justify-content:center;
+  }
+  #lbBox{
+    background:linear-gradient(180deg,#ffffff,#eef7fb);
+    border-radius:20px; padding:24px 26px; width:min(420px,90%); max-height:88vh; overflow-y:auto;
+    box-shadow:0 14px 40px rgba(10,30,50,.4), inset 0 1px 0 #fff;
+    display:flex; flex-direction:column; gap:12px;
+  }
+  #lbBox h2{ font-weight:900; letter-spacing:3px; color:#27607c; text-align:center; margin-bottom:2px; }
+  #lbSub{ text-align:center; font-size:11px; font-weight:800; letter-spacing:1px; color:#7a93a4; margin-top:-6px; }
+  #lbNameRow{ display:flex; gap:8px; align-items:center; }
+  #lbNameRow input{ flex:1; font-family:inherit; font-weight:800; font-size:14px; padding:9px 12px;
+    border-radius:10px; border:2px solid #cfe3ee; color:#27607c; min-width:0; }
+  #lbNameRow button{ flex-shrink:0; }
+  #lbTabs{ display:flex; gap:6px; }
+  #lbTabs button{ flex:1; font-family:inherit; font-weight:900; letter-spacing:1px; font-size:11px;
+    padding:8px; border-radius:10px; border:2px solid #cfe3ee; background:#fff; color:#5a7488; cursor:pointer; }
+  #lbTabs button.on{ background:linear-gradient(180deg,#ffe9b8,#f3c469); color:#7a4d12; border-color:#e6b65a; }
+  #lbList{ display:flex; flex-direction:column; gap:4px; min-height:120px; }
+  .lbRow{ display:flex; align-items:center; gap:10px; padding:9px 12px; border-radius:11px; background:#f4fafd; }
+  .lbRow.me{ background:linear-gradient(90deg,#eafbe9,#f4fafd); box-shadow:inset 0 0 0 1.5px #b7e6ab; }
+  .lbRank{ font-weight:900; color:#9bb2c0; font-size:14px; width:26px; text-align:center; flex-shrink:0; }
+  .lbRow:nth-child(1) .lbRank{ color:#e8a33a; }
+  .lbRow:nth-child(2) .lbRank{ color:#9aa7b0; }
+  .lbRow:nth-child(3) .lbRank{ color:#c08a4a; }
+  .lbName{ flex:1; font-weight:800; color:#33485a; font-size:14px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .lbVal{ font-weight:900; color:#27607c; font-size:15px; flex-shrink:0; }
+  .lbVal small{ font-size:10px; color:#9bb2c0; font-weight:800; margin-left:2px; }
+  #lbStatus{ text-align:center; font-size:12px; font-weight:700; color:#8aa0b0; padding:18px 0; }
+  #lbMine{ display:flex; justify-content:space-around; gap:10px; padding:10px; border-radius:12px;
+    background:linear-gradient(180deg,#f0f8fc,#e6f2f9); margin-top:2px; }
+  #lbMine .lbMineStat{ text-align:center; }
+  #lbMine .lbMineStat small{ display:block; font-size:9px; font-weight:900; letter-spacing:1px; color:#8aa0b0; margin-bottom:3px; }
+  #lbMine .lbMineStat b{ font-size:20px; font-weight:900; color:#27607c; }
   /* hole intro card */
   #holeIntro{
     position:absolute; left:50%; top:34%; transform:translate(-50%,-50%) scale(.8);
@@ -1210,6 +1248,7 @@
     <div id="menuButtons">
       <button class="menuBtn" id="playBtn"><svg class="btnIco" viewBox="0 0 24 24" fill="none"><path d="M7 21 V3" stroke="#1d6b3a" stroke-width="2.4" stroke-linecap="round"/><path d="M7 3.5 L18 7 L7 10.5 Z" fill="#e8554e"/></svg>PLAY GAME</button>
       <button class="menuBtn" id="multiBtn"><svg class="btnIco" viewBox="0 0 24 24" fill="none"><circle cx="8.5" cy="8" r="3.2" fill="#1d6b3a"/><circle cx="16" cy="9" r="2.6" fill="#e8554e"/><path d="M3 19c0-3 2.4-5 5.5-5s5.5 2 5.5 5" stroke="#1d6b3a" stroke-width="2.2" stroke-linecap="round" fill="none"/><path d="M14.5 18.5c.3-2.4 2.2-4 4.5-4 2.2 0 3.8 1.6 4 4" stroke="#e8554e" stroke-width="2" stroke-linecap="round" fill="none"/></svg>MULTIPLAYER</button>
+      <button class="menuBtn alt" id="leaderboardBtn"><svg class="btnIco" viewBox="0 0 24 24" fill="none"><rect x="4" y="11" width="4" height="9" rx="1" fill="#3a7d9c"/><rect x="10" y="6" width="4" height="14" rx="1" fill="#e8a33a"/><rect x="16" y="9" width="4" height="11" rx="1" fill="#3a7d9c"/><path d="M12 2.5l1 2 2.2.3-1.6 1.5.4 2.2L12 7.5l-2 1 .4-2.2L8.8 4.8 11 4.5z" fill="#e8554e"/></svg>LEADERBOARD</button>
       <button class="menuBtn alt" id="settingsBtn"><svg class="btnIco" viewBox="0 0 24 24" fill="none"><path d="M12 8.5a3.5 3.5 0 100 7 3.5 3.5 0 000-7z" stroke="#3a7d9c" stroke-width="2"/><path d="M12 2.5l1.4 2.7 3-.5.6 3 2.7 1.4-1.4 2.7 1.4 2.7-2.7 1.4-.6 3-3-.5L12 21.5l-1.4-2.7-3 .5-.6-3-2.7-1.4 1.4-2.7-1.4-2.7 2.7-1.4.6-3 3 .5L12 2.5z" stroke="#3a7d9c" stroke-width="1.6" stroke-linejoin="round" opacity=".55"/></svg>SETTINGS</button>
     </div>
   </div>
@@ -1821,6 +1860,30 @@
       <div class="ctlRow"><span class="ctlAct">Clubs (driving range)</span><span class="ctlKey"><kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd> <kbd>4</kbd></span></div>
 
       <button class="menuBtn small" id="controlsClose">DONE</button>
+    </div>
+  </div>
+
+  <!-- ============== GLOBAL LEADERBOARD ============== -->
+  <div id="lbScreen">
+    <div id="lbBox">
+      <h2>LEADERBOARD</h2>
+      <div id="lbSub">GLOBAL · EVERY BIRDIE COUNTS</div>
+      <div id="lbNameRow">
+        <input id="lbNameInput" type="text" maxlength="14" placeholder="Your name" autocomplete="off">
+        <button class="menuBtn small" id="lbSaveName">SAVE</button>
+      </div>
+      <div id="lbMine">
+        <div class="lbMineStat"><small>YOUR BIRDIES</small><b id="lbMyBirdies">0</b></div>
+        <div class="lbMineStat"><small>BEST ROUND</small><b id="lbMyBest">—</b></div>
+        <div class="lbMineStat"><small>GLOBAL RANK</small><b id="lbMyRank">—</b></div>
+      </div>
+      <div id="lbTabs">
+        <button data-sort="birdies" class="on">MOST BIRDIES</button>
+        <button data-sort="bestRound">BEST ROUND</button>
+      </div>
+      <div id="lbList"></div>
+      <div id="lbStatus" style="display:none">Loading…</div>
+      <button class="menuBtn small" id="lbClose">DONE</button>
     </div>
   </div>
 
@@ -3360,6 +3423,7 @@ let streak = 0;
 const TESTING = false;  /* RELEASE: campaign courses unlock through play (multiplayer still has all courses) */
 let stats = {bestRound:null, bestStreak:0, bestBirdieStreak:0,
   bests:[null,null,null,null,null,null], holesDone:[0,0,0,0,0,0], rounds:[0,0,0,0,0,0], totalStrokes:0, totalHoles:0,
+  lifetimeBirdies:0, lbName:null, lbBirdiesSent:0,    /* global leaderboard: lifetime birdies + how many already submitted */
   challenges:{}, coins:1000, ownedSkins:['white'], equippedSkin:'white', tourBirdie:{}};  /* everyone starts with 1000 coins to buy a custom ball */
 
 /* ===== SAVE PROGRESS (player's own browser via localStorage) =====
@@ -3389,7 +3453,40 @@ function loadProgress(){
     if(data && data.name && typeof window!=='undefined') window._savedName = data.name;
   }catch(e){ /* corrupt or blocked — ignore, start fresh */ }
 }
-/* ===== CHALLENGES (achievements) ===== id → {name, desc, icon}. stats.challenges[id]=true once earned. */
+/* ===== GLOBAL LEADERBOARD (lifetime birdies + best round) =====
+   Talks to the same server that runs multiplayer, over plain HTTP. Submitting sends the
+   birdies earned since the last submit (incremental) plus the best round score; fetching
+   returns the top players. All wrapped so the game never breaks if the server is asleep. */
+const LB_HOST = 'birdie-blitz-server.onrender.com';
+const LB_BASE = (location.protocol==='https:'?'https':'http') + '://' + LB_HOST;
+function lbName(){
+  return (stats.lbName || window._savedName || 'Player').toString().slice(0,14);
+}
+async function lbSubmit(bestRound){
+  try{
+    const already = stats.lbBirdiesSent||0;
+    const have = stats.lifetimeBirdies||0;
+    const delta = Math.max(0, have - already);           // birdies since last submit
+    if(delta<=0 && bestRound==null) return null;          // nothing new to send
+    const res = await fetch(LB_BASE + '/leaderboard', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ name: lbName(), birdies: delta, bestRound: bestRound ?? null })
+    });
+    if(!res.ok) return null;
+    const data = await res.json();
+    stats.lbBirdiesSent = have;                           // mark these as submitted
+    saveProgress();
+    return data.board || null;
+  }catch(e){ return null; }                               // server asleep/offline — try again later
+}
+async function lbFetch(){
+  try{
+    const res = await fetch(LB_BASE + '/leaderboard', { method:'GET' });
+    if(!res.ok) return null;
+    const data = await res.json();
+    return data.board || [];
+  }catch(e){ return null; }
+}
 const CHALLENGES = [
   {id:'dunk5',     name:'Splashdown',      desc:'Dunk hole 5 on Sakura straight from the air', icon:'🎯', coins:800},
   {id:'ace',       name:'Hole in One',     desc:'Ace any hole', icon:'⛳', coins:1200},
@@ -7789,6 +7886,12 @@ function holed(){
   }
   /* ===== multiplayer: celebrate the cup-drop, then hand off to the turn system ===== */
   if(MP && MP.on){
+    // count MY birdies-or-better toward the global leaderboard (only my own seat's holes)
+    if(diff<=-1){
+      const meSeat = MP.players[MP.turn] && MP.players[MP.turn].seat;
+      const mineNow = MP.mySeats ? MP.mySeats.has(meSeat) : (meSeat===MP.mySeat);
+      if(mineNow){ stats.lifetimeBirdies = (stats.lifetimeBirdies||0) + 1; saveProgress(); }
+    }
     showBanner((ace?'HOLE IN ONE! ':'') + MP.players[MP.turn].name + ' holed in ' + strokes + '!', MP.players[MP.turn].color);
     setTimeout(()=>{ trail=[]; finishShot(true); }, 700);
     return;
@@ -7831,6 +7934,7 @@ function holed(){
     if(diff<=-1){
       setTimeout(()=>SFX.fanfare(), 450);
       birdieStreak++;
+      stats.lifetimeBirdies = (stats.lifetimeBirdies||0) + 1;   // global leaderboard tally
       if(birdieStreak>stats.bestBirdieStreak) stats.bestBirdieStreak=birdieStreak;
       if(birdieStreak>=5) earnChallenge('streak5');
       /* coin reward for scoring well: birdie 25, eagle 50, albatross+ 100 */
@@ -7905,6 +8009,7 @@ function holed(){
     }
     if(qualified && last){
       if(stats.bestRound===null || total<stats.bestRound) stats.bestRound=total;
+      lbSubmit(total);   // push lifetime birdies + this round's score to the global board
       stats.bests = stats.bests||[null,null,null,null];
       if(stats.bests[courseIdx]===null || total<stats.bests[courseIdx]) stats.bests[courseIdx]=total;
       stats.rounds = stats.rounds||[0,0,0,0];
@@ -10137,6 +10242,68 @@ $m('settingsClose').onclick = ()=>{ $m('settingsScreen').style.display='none'; }
 $m('settingsToMenu') && ($m('settingsToMenu').onclick = ()=>{ $m('settingsScreen').style.display='none'; goToMenu(); });
 $m('controlsBtn') && ($m('controlsBtn').onclick = ()=>{ $m('controlsScreen').style.display='flex'; });
 $m('controlsClose') && ($m('controlsClose').onclick = ()=>{ $m('controlsScreen').style.display='none'; });
+
+/* ===== LEADERBOARD UI ===== */
+let lbSort = 'birdies';
+let lbData = null;
+function lbRenderMine(){
+  $m('lbMyBirdies').textContent = (stats.lifetimeBirdies||0).toLocaleString();
+  $m('lbMyBest').textContent = (stats.bestRound!=null) ? (typeof fmtScore==='function'?fmtScore(stats.bestRound):stats.bestRound) : '—';
+  const nm = (lbName()||'').toLowerCase();
+  let rank = '—';
+  if(lbData){
+    const sorted = lbData.slice().sort((a,b)=> lbSort==='birdies'
+      ? (b.birdies-a.birdies)
+      : ((a.bestRound||999)-(b.bestRound||999)) );
+    const i = sorted.findIndex(e=> (e.name||'').toLowerCase()===nm);
+    if(i>=0) rank = '#'+(i+1);
+  }
+  $m('lbMyRank').textContent = rank;
+}
+function lbRenderList(){
+  const list = $m('lbList'), status = $m('lbStatus');
+  if(lbData===null){ list.innerHTML=''; status.style.display='block'; status.textContent='Loading the global board…'; return; }
+  if(!lbData.length){ list.innerHTML=''; status.style.display='block'; status.textContent='No scores yet. Be the first — go birdie a hole!'; return; }
+  status.style.display='none';
+  const sorted = lbData.slice().sort((a,b)=> lbSort==='birdies'
+    ? ((b.birdies-a.birdies) || ((a.bestRound||999)-(b.bestRound||999)))
+    : (((a.bestRound||999)-(b.bestRound||999)) || (b.birdies-a.birdies)) );
+  const myNm = (lbName()||'').toLowerCase();
+  list.innerHTML = sorted.slice(0,50).map((e,i)=>{
+    const me = (e.name||'').toLowerCase()===myNm ? ' me' : '';
+    const val = lbSort==='birdies'
+      ? `${(e.birdies||0).toLocaleString()}<small>birdies</small>`
+      : (e.bestRound!=null ? `${typeof fmtScore==='function'?fmtScore(e.bestRound):e.bestRound}<small>best</small>` : '—');
+    const nameEsc = (e.name||'Player').replace(/[<>&]/g,'');
+    return `<div class="lbRow${me}"><span class="lbRank">${i+1}</span><span class="lbName">${nameEsc}</span><span class="lbVal">${val}</span></div>`;
+  }).join('');
+}
+async function openLeaderboard(){
+  $m('lbScreen').style.display='flex';
+  $m('lbNameInput').value = (stats.lbName || window._savedName || '');
+  lbData = null; lbRenderList(); lbRenderMine();
+  // push any new birdies first so my own count is reflected, then fetch the board
+  await lbSubmit(null);
+  const board = await lbFetch();
+  lbData = board || [];
+  lbRenderList(); lbRenderMine();
+}
+$m('leaderboardBtn') && ($m('leaderboardBtn').onclick = openLeaderboard);
+$m('lbClose') && ($m('lbClose').onclick = ()=>{ $m('lbScreen').style.display='none'; });
+$m('lbSaveName') && ($m('lbSaveName').onclick = ()=>{
+  const v = ($m('lbNameInput').value||'').trim().slice(0,14);
+  if(!v) return;
+  stats.lbName = v; window._savedName = v; saveProgress();
+  try{ SFX.click && SFX.click(); }catch(e){}
+  // resubmit under the new name so the board shows it, then refresh
+  stats.lbBirdiesSent = 0;   // re-send my lifetime total under the new name
+  openLeaderboard();
+});
+$m('lbTabs') && $m('lbTabs').querySelectorAll('button').forEach(b=> b.onclick = ()=>{
+  $m('lbTabs').querySelectorAll('button').forEach(x=>x.classList.remove('on'));
+  b.classList.add('on'); lbSort = b.dataset.sort;
+  lbRenderList(); lbRenderMine();
+});
 $m('sfxSlider').oninput = e=>{ SET.sfx = e.target.value/100; saveProgress(); };
 $m('musicSlider').oninput = e=>{ SET.music = e.target.value/100; if(MUSIC.gain) MUSIC.gain.gain.value = SET.music*0.4; saveProgress(); };
 $m('qualitySel').onchange = e=>{ SET.quality = e.target.value; AUTOQ.user = true; if(inMenu) initPetals(); saveProgress(); };
