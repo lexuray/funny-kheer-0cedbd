@@ -205,6 +205,27 @@
   /* legacy (unused) */
   #accTrack{display:none;} #accZones{display:none;} .zone{display:none;}
   #hint{ display:none; }
+  /* ===== GREEN-READING CAMERA UI ===== */
+  #greenCamBtn{ position:absolute; right:14px; bottom:120px; z-index:30; font-family:inherit; font-weight:900;
+    font-size:13px; letter-spacing:.4px; color:#10402a; cursor:pointer; display:inline-flex; align-items:center; gap:6px;
+    background:linear-gradient(180deg,#caf5d4,#86d98e); border:none; border-radius:99px; padding:10px 18px;
+    box-shadow:0 5px 0 rgba(20,90,40,.35), 0 10px 22px rgba(20,90,40,.28); transition:transform .1s; }
+  #greenCamBtn:hover{ transform:translateY(-1px); }
+  #greenCamBtn:active{ transform:translateY(3px); box-shadow:0 1px 0 rgba(20,90,40,.35); }
+  #greenCamBtn.on{ background:linear-gradient(180deg,#fff0b8,#ffd84d); color:#5a3d00; box-shadow:0 5px 0 rgba(150,110,10,.35), 0 10px 22px rgba(180,130,20,.28); }
+  #greenReadHud{ position:absolute; right:14px; bottom:180px; z-index:30; display:none; flex-direction:column;
+    align-items:center; gap:8px; background:rgba(16,28,22,.7); -webkit-backdrop-filter:blur(8px); backdrop-filter:blur(8px);
+    padding:12px; border-radius:16px; box-shadow:0 8px 24px rgba(8,20,12,.4); }
+  .grPadLabel{ font-size:9px; font-weight:900; letter-spacing:2px; color:#9fe0b0; }
+  .grPad{ display:grid; grid-template-columns:repeat(3,36px); grid-template-rows:repeat(2,36px); gap:5px; }
+  .grUp{ grid-column:2; grid-row:1; } .grLeft{ grid-column:1; grid-row:2; }
+  .grRight{ grid-column:3; grid-row:2; } .grDown{ grid-column:2; grid-row:2; }
+  .grZoom{ display:flex; gap:6px; }
+  .grBtn{ font-family:inherit; font-weight:900; font-size:16px; color:#10402a; cursor:pointer;
+    background:linear-gradient(180deg,#eafaee,#bfe9c6); border:none; border-radius:10px; width:36px; height:36px;
+    display:flex; align-items:center; justify-content:center; box-shadow:0 3px 0 rgba(20,90,40,.3); transition:transform .08s; user-select:none; }
+  .grBtn:active{ transform:translateY(2px); box-shadow:0 1px 0 rgba(20,90,40,.3); }
+  @media (max-width:700px){ #greenCamBtn{ bottom:96px; font-size:12px; padding:9px 14px; } #greenReadHud{ bottom:150px; } }
   #banner{
     position:absolute; left:50%; top:32%; transform:translate(-50%,-50%) scale(.6);
     z-index:6; font-weight:900; font-size:46px; letter-spacing:1px;
@@ -1006,6 +1027,23 @@
         <div class="chip"><small>Strokes</small><b id="strokeVal">0</b></div>
         <div class="chip" id="scoreChip"><small>Round</small><b id="scoreVal">E</b></div>
         <div class="chip" id="streakChip">🔥<b id="streakVal">x2</b></div>
+      </div>
+    </div>
+
+    <!-- READ GREEN: toggles the free-look putting camera; shows only while putting -->
+    <button id="greenCamBtn" style="display:none">🔍 READ GREEN</button>
+    <!-- directional pad shown while reading the green -->
+    <div id="greenReadHud" style="display:none">
+      <div class="grPadLabel">LOOK AROUND</div>
+      <div class="grPad">
+        <button class="grBtn grUp" data-dir="up">▲</button>
+        <button class="grBtn grLeft" data-dir="left">◀</button>
+        <button class="grBtn grRight" data-dir="right">▶</button>
+        <button class="grBtn grDown" data-dir="down">▼</button>
+      </div>
+      <div class="grZoom">
+        <button class="grBtn" data-dir="in">＋</button>
+        <button class="grBtn" data-dir="out">－</button>
       </div>
     </div>
 
@@ -3476,6 +3514,8 @@ function addCoins(n, src){
 }
 let keys = {};
 let cam = {x:0, y:0, h:120, yaw:0, pitch:0.5, foc:400};
+/* free-look green-reading camera: toggled on the green to orbit/tilt and study the slope */
+let greenCam = { on:false, yaw:0, pitch:0.5, dist:150, tYaw:0, tPitch:0.5, tDist:150 };
 let timeScale = 1, shake = 0, camPunch = 0, nearMiss = false;
 let flash = null;                       // {color, a}
 let celebT = 0;                         // eagle/ace celebration timer
@@ -3605,6 +3645,11 @@ const SFX = {
   },
   clockExpire(){                                    // buzzer when the clock runs out
     tone(160,.5,'sawtooth',.22,0,-40); noise(.2,.2);
+  },
+  yourTurn(){ /* bright two-note alert when it becomes your turn — clearly "you're up!" */
+    tone(784,.13,'triangle',.2,0);        /* G5 */
+    tone(1047,.18,'triangle',.22,.12);    /* C6 — rising, attention-grabbing */
+    tone(1568,.12,'sine',.12,.26);        /* sparkle on top */
   },
   tick(){ tone(900,.03,'square',.05); },
   coin(n){ /* bright ka-ching: two quick ascending dings + a sparkle, scaled a touch by amount */
@@ -3958,6 +4003,43 @@ function camMode(){
   if(dH < 300) return CAM_MODES.approach;
   return CAM_MODES.drive;
 }
+/* ===== GREEN-READING FREE-LOOK CAMERA controls ===== */
+function canGreenRead(){
+  return !rangeMode && state===ST.AIM && onGreenAt(ball.x,ball.y) && !ball.air && !(MP && MP.online && MP._inputLocked);
+}
+function toggleGreenCam(force){
+  const want = (force!=null) ? force : !greenCam.on;
+  if(want && !canGreenRead()){ return; }   // only while putting
+  if(want){
+    // seed the orbit from the current putt view so it eases in smoothly
+    greenCam.on = true;
+    greenCam.yaw = cam.yaw; greenCam.tYaw = cam.yaw;
+    greenCam.pitch = 0.62;  greenCam.tPitch = 0.62;
+    greenCam.dist = 150;    greenCam.tDist = 150;
+    try{ SFX.tick && SFX.tick(); }catch(e){}
+    setHint('Reading the green · drag or ◀▶▲▼ to look around · V or DONE to putt');
+    const b=$m('greenCamBtn'); if(b){ b.classList.add('on'); b.textContent='✓ DONE READING'; }
+    const dr=$m('greenReadHud'); if(dr) dr.style.display='flex';
+  } else {
+    greenCam.on = false;
+    setHint('Pick a line ◀ ▶ · pull back to see the read');
+    const b=$m('greenCamBtn'); if(b){ b.classList.remove('on'); b.textContent='🔍 READ GREEN'; }
+    const dr=$m('greenReadHud'); if(dr) dr.style.display='none';
+  }
+  updateGreenCamBtn();
+}
+function panGreenCam(dYaw, dPitch, dDist){
+  if(!greenCam.on) return;
+  greenCam.tYaw += dYaw;
+  greenCam.tPitch = Math.max(0.12, Math.min(1.15, greenCam.tPitch + dPitch));   // up/down tilt limits
+  greenCam.tDist  = Math.max(70,  Math.min(320,  greenCam.tDist  + dDist));     // zoom in/out limits
+}
+/* show/hide the READ GREEN button based on whether we're putting */
+function updateGreenCamBtn(){
+  const b=$m('greenCamBtn'); if(!b) return;
+  b.style.display = (canGreenRead() || greenCam.on) ? 'inline-flex' : 'none';
+}
+
 function lerpAngle(a,b,t){
   let d=b-a;
   while(d> Math.PI) d-=Math.PI*2;
@@ -3965,6 +4047,26 @@ function lerpAngle(a,b,t){
   return a+d*t;
 }
 function updateCamera(dt){
+  /* GREEN-READING FREE-LOOK CAMERA: when toggled on (only while putting), the camera
+     detaches from auto-follow so the player can orbit and tilt to read the slope. It orbits
+     around the ball; yaw spins left/right, pitch tilts up/down, height follows pitch. */
+  if(greenCam && greenCam.on){
+    const gc = greenCam;
+    // smooth toward the player-controlled orbit targets
+    const k = Math.min(1, dt*8);
+    gc.yaw   = lerpAngle(gc.yaw, gc.tYaw, k);
+    gc.pitch += (gc.tPitch - gc.pitch)*k;
+    gc.dist  += (gc.tDist  - gc.dist )*k;
+    const surfH = (typeof surfaceHeightVis==='function') ? surfaceHeightVis(ball.x,ball.y) : 0;
+    cam.yaw = gc.yaw;
+    cam.pitch = gc.pitch;
+    cam.foc = 430;
+    cam.h += ((90 + surfH + gc.pitch*120) - cam.h)*k;
+    // orbit the ball at the chosen distance
+    cam.x += ((ball.x - Math.cos(gc.yaw)*gc.dist) - cam.x)*k;
+    cam.y += ((ball.y - Math.sin(gc.yaw)*gc.dist) - cam.y)*k;
+    return;
+  }
   if(state===ST.FLY){
     /* flyover: drift from green back to the tee along the hole */
     const p = Math.max(0, Math.min(1, flyT/3.2));
@@ -4713,33 +4815,23 @@ function predictShot(power){
      about the rim assist — line + speed are still on the player. */
   if(clubIdx===3){
     const v = Math.sqrt(2*50*Math.max(8,(power/100)*putterMax()));
-    const o = {x:ball.x, y:ball.y, vx:Math.cos(aimAngle)*v, vy:Math.sin(aimAngle)*v};
+    const o = {x:ball.x, y:ball.y, z:0, vx:Math.cos(aimAngle)*v, vy:Math.sin(aimAngle)*v, vz:0, air:false, moving:true};
     const pts=[{x:o.x,y:o.y,z:surfaceHeightVis(o.x,o.y)}];
     let trav=0;
     const dt=1/40;
-    /* match the REAL break: same slope formula as applySlopeAndRim() so the yellow line
-       tracks where the ball actually goes, including hard-breaking and volcano (steeper)
-       greens. A tiny read humility remains so it's not a perfect aimbot, but it no longer
-       drifts off on extreme slope. */
-    const gScale = (THEME()==='volcano' ? SLOPE_G*1.35 : SLOPE_G);
-    for(let i=0;i<420;i++){
+    /* EXACT accuracy: drive the prediction through the SAME physics the real ball uses
+       (applySlopeAndRim), including the rim/SDF pull near the hole and volcano steepness.
+       No reimplemented copy, so the yellow line cannot drift from reality on sharp breaks. */
+    for(let i=0;i<460;i++){
       const sf=surfaceAt(o.x,o.y);
       const spd=Math.hypot(o.vx,o.vy);
-      if(sf==='green' && spd>4){
-        const g=greenGrad(o.x,o.y);
-        let ax=-g.x*gScale, ay=-g.y*gScale;
-        const vx=o.vx/spd, vy=o.vy/spd;
-        const along = ax*vx + ay*vy;
-        const lx = ax - along*vx, ly = ay - along*vy;
-        const m = 1 + 0.9*Math.max(0, 1 - spd/240);   /* same late-break amplification as the real roll */
-        const readQ = 0.97;                            /* near-exact read; was 0.55–0.92 (too weak on breaks) */
-        o.vx += (along*vx + lx*m)*readQ*dt;
-        o.vy += (along*vy + ly*m)*readQ*dt;
-      }
+      if(sf==='water') break;
+      applySlopeAndRim(o, sf, spd, dt);            // ← the real putt physics
       let decel=FRICTION[sf] ?? FRICTION.rough;
       if(sf==='green' && spd<24) decel += (24-spd)*(24-spd)*0.62;
-      const ns=Math.max(0, spd - decel*dt);
-      if(spd>0){ o.vx*=ns/spd; o.vy*=ns/spd; }
+      const sp2=Math.hypot(o.vx,o.vy);
+      const ns=Math.max(0, sp2 - decel*dt);
+      if(sp2>0){ o.vx*=ns/sp2; o.vy*=ns/sp2; }
       o.x+=o.vx*dt; o.y+=o.vy*dt; trav+=ns*dt;
       if(i%2===0) pts.push({x:o.x,y:o.y,z:surfaceHeightVis(o.x,o.y)});
       if(ns<6) break;
@@ -6704,6 +6796,7 @@ function needleSpeedNow(){
 }
 function beginPull(px,py){
   if(MP && MP.online && MP._inputLocked) return;   // not your turn in an online match
+  if(greenCam && greenCam.on) return;              // reading the green — exit read mode first
   pullStart = {x:px, y:py};
   pullPower = 0; pullShape = 0;
   accT = 0; accVal = 0;
@@ -7328,6 +7421,14 @@ function resetToMat(){
   updateHUD();
 }
 function waterReset(){
+  /* MULTIPLAYER SPECTATING: if we're replaying a remote shot, don't run our own water
+     penalty — snap to the shooter's authoritative resting spot instead. */
+  if(MP && MP.online && MP._remoteCorrect){
+    ball.moving=false; ball.air=false; ball.vx=ball.vy=ball.vz=0;
+    state = ST.AIM;
+    finishShot(!!MP._remoteCorrect.holed);
+    return;
+  }
   const lava = THEME()==='volcano';
   SFX.splash();
   if(lava){
@@ -7344,9 +7445,34 @@ function waterReset(){
   ball.x=lastSafe.x; ball.y=lastSafe.y; ball.z=0;
   ball.vx=ball.vy=ball.vz=0; ball.air=false; ball.moving=false;
   ball.rimming=false; ball.grazed=false;
-  state = ST.AIM; nextShotSetup();
+  state = ST.AIM;
+  /* MULTIPLAYER (the shooter): a water penalty keeps the SAME player on the tee for another
+     shot. Re-broadcast the resolved (penalty) position so opponents see it, re-arm the clock,
+     and keep input unlocked. Do NOT advance the turn. */
+  if(MP && MP.on){
+    const p = MP.players[MP.turn];
+    if(p){ p.ball = ball; p.strokes = strokes; p.holed = false; }
+    if(typeof mpRenderBoard==='function') mpRenderBoard();
+    if(MP.online){
+      // broadcast the penalty result for my owned seats so opponents stay in sync
+      const mine = MP.mySeats ? MP.mySeats.has(p.seat) : (p.seat===MP.mySeat);
+      if(mine && typeof MP_broadcastResolvedShot==='function'){
+        MP._pendingShot = null;   // no flight to replay; it's a reset to lastSafe
+        MP_broadcastResolvedShot(p.seat, ball, strokes, false, true);   // penalty=true: same player continues
+      }
+      // re-arm my clock / input only if this is my seat's turn
+      if(mine){ MP._inputLocked = false; if(typeof mpArmClock==='function') mpArmClock(); }
+    } else {
+      if(typeof mpArmClock==='function') mpArmClock();
+    }
+    nextShotSetup();
+    updateHUD();
+    return;
+  }
+  nextShotSetup();
 }
 function nextShotSetup(){
+  if(greenCam && greenCam.on) toggleGreenCam(false);   // exit green-reading on a fresh shot
   aimAngle = Math.atan2(PIN.y-ball.y, PIN.x-ball.x);
   spin = 0; shape = 0; pullShape = 0;
   resetPuttPressure();                 /* new shot → fresh pressure clock */
@@ -7485,6 +7611,7 @@ function genDecor(hi){
 }
 function startHole(i, skipFly){
   holeIdx = i;
+  if(greenCam){ greenCam.on = false; const dr=$m('greenReadHud'); if(dr) dr.style.display='none'; const gb=$m('greenCamBtn'); if(gb){ gb.classList.remove('on'); gb.style.display='none'; gb.textContent='🔍 READ GREEN'; } }
   loadHole(i);
   genDecor(i);
   resetPuttPressure();
@@ -7573,6 +7700,15 @@ function endReplay(){
 const SINK_DUR = 0.6;
 let sinkT = 0;                       /* render-only: ball dropping below the rim */
 function holed(){
+  /* MULTIPLAYER SPECTATING: when we're replaying someone else's shot, our local physics must
+     NOT decide the ball was holed — the shooter already told us the authoritative outcome.
+     If they said it was NOT holed (just close), let the ball settle and snap to their rest. */
+  if(MP && MP.online && MP._remoteCorrect && !MP._remoteCorrect.holed){
+    ball.moving=false; ball.air=false; ball.vx=ball.vy=ball.vz=0;
+    state = ST.AIM;
+    finishShot(false);   // applies the authoritative resting spot
+    return;
+  }
   if(rangeMode){
     /* on the range there's no holing out — dropping it in a cup is a hole-in-one: 250 coins */
     dunkFlag = false;
@@ -7909,7 +8045,13 @@ function frame(now){
       trail.push({x:s.x,y:s.y,z:s.z,life:0.55,gold:ball.gold});
     }
   }
-  if(state===ST.AIM){
+  if(greenCam && greenCam.on){
+    // while reading the green, the arrow keys orbit/tilt the camera instead of aiming
+    if(keys.ArrowLeft)  panGreenCam(-2.6*dt, 0, 0);
+    if(keys.ArrowRight) panGreenCam( 2.6*dt, 0, 0);
+    if(keys.ArrowUp)    panGreenCam(0,  1.6*dt, 0);
+    if(keys.ArrowDown)  panGreenCam(0, -1.6*dt, 0);
+  } else if(state===ST.AIM){
     let changed = false;
     if(keys.ArrowLeft) { aimAngle -= 1.6*dt; changed=true; }
     if(keys.ArrowRight){ aimAngle += 1.6*dt; changed=true; }
@@ -7961,6 +8103,7 @@ function frame(now){
 
   if(state!==ST.REPLAY && state!==ST.FLY) physics(dt*timeScale);
   updateCamera(dt);
+  if(typeof updateGreenCamBtn==='function') updateGreenCamBtn();   // show READ GREEN only while putting
 
   if(rollGain){
     const sp = (!ball.air && ball.moving && state===ST.MOVING) ? Math.hypot(ball.vx,ball.vy) : 0;
@@ -8185,6 +8328,7 @@ window.addEventListener('keydown', e=>{
   if(e.key==='c' || e.key==='C'){ greenBook=!greenBook; if(state===ST.AIM) setHint(greenBook?'Green book ON':'Green book OFF'); }
   if((e.key==='p' || e.key==='P') && state===ST.AIM) startReplay();
   if(e.key==='m' || e.key==='M'){ if(!inMenu) openInGameSettings(); }
+  if(e.key==='v' || e.key==='V'){ if(!inMenu) toggleGreenCam(); }
   if(e.key===' '){
     if(state===ST.FLY) endFlyover();
     else if(state===ST.REPLAY) endReplay();
@@ -8199,7 +8343,14 @@ const wrapEl = document.getElementById('gameWrap');
 wrapEl.style.touchAction = 'none';
 wrapEl.addEventListener('pointerdown', e=>{
   ac();
-  if(inMenu || e.target.closest('#endCard, #bottomLeft, #readout, #minimap, #hud, #menuScreen, #courseScreen, #settingsScreen, #spinChip')) return;
+  if(inMenu || e.target.closest('#endCard, #bottomLeft, #readout, #minimap, #hud, #menuScreen, #courseScreen, #settingsScreen, #spinChip, #greenReadHud, #greenCamBtn')) return;
+  // GREEN-READING: drag anywhere on the scene to orbit/tilt the camera
+  if(greenCam && greenCam.on){
+    e.preventDefault();
+    wrapEl.setPointerCapture(e.pointerId);
+    greenCam._drag = { x:e.clientX, y:e.clientY };
+    return;
+  }
   if(state===ST.FLY){ endFlyover(); return; }
   if(state===ST.REPLAY){ endReplay(); return; }
   if(state!==ST.AIM || ball.moving) return;
@@ -8208,11 +8359,19 @@ wrapEl.addEventListener('pointerdown', e=>{
   beginPull(e.clientX, e.clientY);
 });
 wrapEl.addEventListener('pointermove', e=>{
+  if(greenCam && greenCam.on && greenCam._drag){
+    e.preventDefault();
+    const dx = e.clientX - greenCam._drag.x, dy = e.clientY - greenCam._drag.y;
+    greenCam._drag = { x:e.clientX, y:e.clientY };
+    panGreenCam(dx*0.006, -dy*0.004, 0);   // horizontal drag = orbit, vertical = tilt
+    return;
+  }
   if(state!==ST.PULL) return;
   e.preventDefault();
   updatePull(e.clientX, e.clientY);
 });
 wrapEl.addEventListener('pointerup', e=>{
+  if(greenCam && greenCam.on && greenCam._drag){ greenCam._drag=null; return; }
   if(state!==ST.PULL) return;
   e.preventDefault();
   releasePull();
@@ -8329,6 +8488,7 @@ function csPetalLoop(ts){
 }
 function showMenu(){
   inMenu = true;
+  if(greenCam){ greenCam.on = false; const dr=$m('greenReadHud'); if(dr) dr.style.display='none'; const gb=$m('greenCamBtn'); if(gb){ gb.classList.remove('on'); gb.style.display='none'; } }
   if(MP){ clearInterval(MP.clockTimer); MP=null; }
   { const h=$m('mpHud'); if(h) h.style.display='none'; const sb=$m('mpBoard'); if(sb) sb.classList.remove('show'); const sp=$m('skinPot'); if(sp) sp.classList.remove('show'); }
   $m('menuScreen').style.display='flex';
@@ -8912,6 +9072,7 @@ function mpLoadPlayer(idx){
     const mine = MP.mySeats ? MP.mySeats.has(p.seat) : (p.seat === MP.mySeat);
     MP._inputLocked = !mine;
     if(mine){
+      try{ SFX.yourTurn && SFX.yourTurn(); }catch(e){}   // audible alert: you're up
       mpArmClock();
     } else {
       // not my turn: stop my clock and show a neutral "waiting" dash so the number
@@ -8926,6 +9087,7 @@ function mpLoadPlayer(idx){
     }
     return;
   }
+  try{ SFX.yourTurn && SFX.yourTurn(); }catch(e){}   // local hot-seat: signal the handoff
   mpArmClock();
 }
 
@@ -9565,16 +9727,17 @@ const NET = (function(){
      advance the turn. We send the resolved resting position so flight outcome
      is identical everywhere with no random divergence.
      ========================================================================= */
-  window.MP_broadcastResolvedShot = function(seat, ball, strokes, holed){
+  window.MP_broadcastResolvedShot = function(seat, ball, strokes, holed, penalty){
     if(!(MP && MP.online)) return;
-    if(seat !== MP.mySeat) return;                 // only broadcast my own shots
+    const mine = MP.mySeats ? MP.mySeats.has(seat) : (seat === MP.mySeat);
+    if(!mine) return;                              // only broadcast my own seats' shots
     const launch = MP._pendingShot || null;
     MP._pendingShot = null;
     NET.sendShot({
       seat,
       launch,                                       // exact launch → remote animates the flight
       rest: { x:ball.x, y:ball.y, z:0 },            // authoritative landing → correct after flight
-      strokes, holed: !!holed
+      strokes, holed: !!holed, penalty: !!penalty
     });
   };
 
@@ -9612,6 +9775,14 @@ const NET = (function(){
       p.ball = Object.assign(p.ball||{}, { x:evt.rest.x, y:evt.rest.y, z:0, vx:0,vy:0,vz:0, air:false, moving:false });
       p.strokes = evt.strokes; p.holed = !!evt.holed;
       if(evt.holed) p.holeStrokes = evt.strokes;
+      // WATER PENALTY: the same player keeps shooting — snap their ball to the safe spot,
+      // show the splash banner, but do NOT advance the turn.
+      if(evt.penalty){
+        if(MP.turn === idxOfSeat(seat)){ ball = p.ball; strokes = p.strokes; }
+        showBanner('SPLASH! +1', '#54bdf0');
+        if(typeof mpRenderBoard==='function') mpRenderBoard();
+        return;
+      }
       // if it's currently this seat's turn locally, resolve the turn forward
       if(MP.turn === idxOfSeat(seat)){
         ball = p.ball; strokes = p.strokes;
@@ -9739,6 +9910,29 @@ $m('tcContinue') && ($m('tcContinue').onclick = ()=>{
   showCourses();
 });
 { const mb=$m('menuBtnHud'); if(mb) mb.onclick = ()=>{ if(!inMenu) openInGameSettings(); }; }
+{ const gb=$m('greenCamBtn'); if(gb) gb.onclick = ()=>toggleGreenCam(); }
+{ // directional pad: press-and-hold to keep panning
+  const pad=$m('greenReadHud');
+  if(pad){
+    let padTimer=null;
+    const step=(dir)=>{
+      if(dir==='left')  panGreenCam(-0.05,0,0);
+      else if(dir==='right') panGreenCam(0.05,0,0);
+      else if(dir==='up')    panGreenCam(0,0.035,0);
+      else if(dir==='down')  panGreenCam(0,-0.035,0);
+      else if(dir==='in')    panGreenCam(0,0,-8);
+      else if(dir==='out')   panGreenCam(0,0,8);
+    };
+    pad.querySelectorAll('.grBtn').forEach(b=>{
+      const dir=b.dataset.dir;
+      const start=(e)=>{ e.preventDefault(); step(dir); clearInterval(padTimer); padTimer=setInterval(()=>step(dir), 55); };
+      const stop=()=>{ clearInterval(padTimer); padTimer=null; };
+      b.addEventListener('mousedown', start); b.addEventListener('touchstart', start, {passive:false});
+      b.addEventListener('mouseup', stop); b.addEventListener('mouseleave', stop);
+      b.addEventListener('touchend', stop); b.addEventListener('touchcancel', stop);
+    });
+  }
+}
 { const sk=$m('skipHoleBtn'); if(sk) sk.onclick = ()=>{
     if(inMenu || rangeMode || practiceMode || (MP&&MP.on)) return;
     if(holeIdx < CH().length-1) startHole(holeIdx+1);   // jump to the next hole (already cleared)
