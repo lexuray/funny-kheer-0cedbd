@@ -33,8 +33,9 @@
   #hud{
     position:absolute; top:10px; left:10px; right:10px;
     display:flex; gap:8px; flex-wrap:wrap; justify-content:space-between;
-    pointer-events:none; z-index:5;
+    pointer-events:none; z-index:5; padding-right:120px;
   }
+  @media (max-width:700px){ #hud{ padding-right:46px; } #fsBtnLabel{ display:none !important; } #fsBtn{ padding:0 9px !important; } }
   .hudGroup{display:flex; gap:8px; flex-wrap:wrap;}
   :root{
     --ink:rgba(16,24,19,.58);            /* unified panel glass   */
@@ -1092,10 +1093,12 @@
     </div>
     <canvas id="minimap" width="150" height="96"></canvas>
 
-    <button id="fsBtn" title="Fullscreen (F)" style="position:absolute;bottom:10px;right:10px;z-index:40;
-      width:34px;height:34px;display:flex;align-items:center;justify-content:center;
-      background:rgba(20,30,24,.7);color:#cfe8d4;border:1px solid rgba(120,180,120,.4);
-      border-radius:8px;cursor:pointer;font-size:16px;line-height:1;padding:0;" aria-label="Toggle fullscreen">⛶</button>
+    <button id="fsBtn" title="Fullscreen (press F)" style="position:absolute;top:12px;right:12px;z-index:60;
+      height:34px;display:flex;align-items:center;gap:6px;justify-content:center;
+      background:rgba(20,30,24,.78);color:#dff5e4;border:1.5px solid rgba(140,210,150,.6);
+      border-radius:10px;cursor:pointer;font-size:12px;font-weight:800;letter-spacing:.5px;
+      line-height:1;padding:0 11px;box-shadow:0 2px 8px rgba(0,0,0,.25);font-family:inherit;"
+      aria-label="Toggle fullscreen"><span style="font-size:16px">⛶</span><span id="fsBtnLabel">FULLSCREEN</span></button>
 
     <div id="hud">
       <div class="hudGroup">
@@ -1744,6 +1747,54 @@
         <div class="lockBadge" id="course9Lock">🔒 Birdie every hole on Volcano Ridge to unlock</div>
         <div class="lockX" id="course9X"></div>
       </div>
+      <div class="courseCard" id="course10">
+        <svg class="cpArt" viewBox="0 0 200 118" preserveAspectRatio="xMidYMid slice">
+          <defs>
+            <linearGradient id="twSky" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stop-color="#0a0520"/><stop offset=".5" stop-color="#1a0a3e"/><stop offset="1" stop-color="#5e1a8a"/></linearGradient>
+            <radialGradient id="twSun" cx=".5" cy=".5" r=".5">
+              <stop offset="0" stop-color="#ffffff"/><stop offset=".3" stop-color="#ff8ad0"/><stop offset=".6" stop-color="#ffd24a" stop-opacity=".5"/><stop offset="1" stop-color="#6a5bff" stop-opacity="0"/></radialGradient>
+            <linearGradient id="twTrack" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0" stop-color="#ff3b6b"/><stop offset=".18" stop-color="#ff8a3b"/><stop offset=".36" stop-color="#ffe23b"/><stop offset=".54" stop-color="#3bff7a"/><stop offset=".72" stop-color="#3bd4ff"/><stop offset=".9" stop-color="#6a5bff"/><stop offset="1" stop-color="#c95bff"/></linearGradient>
+          </defs>
+          <rect width="200" height="118" fill="url(#twSky)"/>
+          <!-- nebula glow -->
+          <ellipse cx="60" cy="36" rx="74" ry="48" fill="#a03bd0" opacity=".4"/>
+          <ellipse cx="150" cy="76" rx="64" ry="44" fill="#3b6ad0" opacity=".34"/>
+          <!-- stars -->
+          <g fill="#fff">
+            <circle cx="22" cy="20" r="1"/><circle cx="58" cy="13" r=".8"/><circle cx="98" cy="28" r="1.1"/>
+            <circle cx="132" cy="16" r=".8"/><circle cx="174" cy="24" r="1"/><circle cx="38" cy="52" r=".8"/>
+            <circle cx="188" cy="58" r="1"/><circle cx="14" cy="74" r=".9"/><circle cx="112" cy="60" r=".8"/></g>
+          <!-- rainbow sun -->
+          <circle cx="150" cy="28" r="46" fill="url(#twSun)"/>
+          <circle cx="150" cy="28" r="9" fill="#fff"/>
+          <!-- rainbow track ribbon sweeping across, banked -->
+          <path d="M-6 96 Q60 50 120 78 T210 54" fill="none" stroke="#0e0822" stroke-width="22" stroke-linecap="round"/>
+          <path d="M-6 96 Q60 50 120 78 T210 54" fill="none" stroke="url(#twTrack)" stroke-width="16" stroke-linecap="round"/>
+          <path d="M-6 96 Q60 50 120 78 T210 54" fill="none" stroke="#fff" stroke-width="1.5" stroke-dasharray="3 6" opacity=".7"/>
+          <!-- neon rails -->
+          <path d="M-6 88 Q60 42 120 70 T210 46" fill="none" stroke="#7ad4ff" stroke-width="1.6" opacity=".7"/>
+          <path d="M-6 104 Q60 58 120 86 T210 62" fill="none" stroke="#ff79c4" stroke-width="1.6" opacity=".7"/>
+          <!-- floating candy green island -->
+          <ellipse cx="150" cy="58" rx="30" ry="13" fill="#0e0826"/>
+          <ellipse cx="150" cy="55" rx="28" ry="11" fill="#46e6ff"/>
+          <ellipse cx="150" cy="53" rx="18" ry="6" fill="#aef6ff" opacity=".6"/>
+          <circle cx="160" cy="54" r="1.4" fill="#0a2a3a"/>
+          <line x1="160" y1="54" x2="160" y2="40" stroke="#fff" stroke-width="1.2"/>
+          <path d="M160 40 L168 43 L160 46 Z" fill="#ff6ad5"/>
+        </svg>
+        <div class="courseName">Twister</div>
+        <div class="courseInfo">9 holes · Par 34</div>
+        <div class="cpDiff"><span>DIFFICULTY</span>
+          <span class="cpDiffDots"><i class="on hard"></i><i class="on hard"></i><i class="on hard"></i><i class="on hard"></i><i class="on hard"></i></span>
+          <span class="cpDiffLabel">Insane</span></div>
+        <div class="courseBest" id="course10Best">Best: —</div>
+        <div class="cpProgress"><div class="cpBar"><div class="cpFill" id="course10Prog"></div></div><div class="cpLabel" id="course10ProgLbl">0 / 9 holes</div></div>
+        <button class="teeBtn" id="course10Play"><span><svg class="btnIco" viewBox="0 0 24 24" fill="none"><path d="M7 21 V3" stroke="#1d6b3a" stroke-width="2.4" stroke-linecap="round"/><path d="M7 3.5 L18 7 L7 10.5 Z" fill="#e8554e"/></svg>TEE OFF</span></button>
+        <div class="lockBadge" id="course10Lock">🔒 Birdie every hole on Galaxy Falls to unlock</div>
+        <div class="lockX" id="course10X"></div>
+      </div>
     </div>
     <div id="csButtons">
       <button class="csBtn statsBtn" id="statsBtn"><span class="csIcon"><svg viewBox="0 0 24 24" fill="none"><rect x="4" y="13" width="3.6" height="7" rx="1" fill="#15455f"/><rect x="10.2" y="8" width="3.6" height="12" rx="1" fill="#15455f"/><rect x="16.4" y="4" width="3.6" height="16" rx="1" fill="#15455f"/></svg></span><span>STATS</span></button>
@@ -2011,7 +2062,7 @@
   <div id="lbScreen">
     <div id="lbBox">
       <h2>LEADERBOARD</h2>
-      <div id="lbSub">GLOBAL · EVERY BIRDIE COUNTS</div>
+      <div id="lbSub">GLOBAL · SET A NAME TO JOIN THE BOARD</div>
       <div id="lbNameRow">
         <input id="lbNameInput" type="text" maxlength="14" placeholder="Your name" autocomplete="off">
         <button class="menuBtn small" id="lbSaveName">SAVE</button>
@@ -2083,9 +2134,20 @@ function toggleFullscreen(){
      document.webkitExitFullscreen ? document.webkitExitFullscreen() : null);
   }
 }
+function syncFsLabel(){
+  const lbl=document.getElementById('fsBtnLabel');
+  if(lbl) lbl.textContent = document.fullscreenElement ? 'EXIT FULL' : 'FULLSCREEN';
+}
+document.addEventListener('fullscreenchange', syncFsLabel);
+document.addEventListener('webkitfullscreenchange', syncFsLabel);
+{ /* bind immediately (script runs after the button exists in the DOM) and also on load as a backstop */
+  const fb=document.getElementById('fsBtn');
+  if(fb && !fb._bound){ fb.addEventListener('click', toggleFullscreen); fb._bound=true; }
+}
 window.addEventListener('DOMContentLoaded', ()=>{
   const fb=document.getElementById('fsBtn');
-  if(fb) fb.addEventListener('click', toggleFullscreen);
+  if(fb && !fb._bound){ fb.addEventListener('click', toggleFullscreen); fb._bound=true; }
+  syncFsLabel();
 });
 /* run once more after layout settles so the very first frame is already crisp */
 requestAnimationFrame(sizeCanvas);
@@ -2393,9 +2455,9 @@ function surfaceAt(px,py){
   if(dist(px,py,TEE.x,TEE.y) <= 34) return 'tee';
   const ds = distToSpine(px,py);
   if(ds <= FAIRWAY_W) return 'fairway';
-  /* Volcano Ridge & Galaxy Falls have NO rough — everything off the short grass is OOB
-     (molten lava / the galaxy void) */
-  if(THEME()==='volcano' || THEME()==='galaxy') return 'water';
+  /* Volcano Ridge, Galaxy Falls & Twister have NO rough — everything off the short grass is
+     OOB (molten lava / the galaxy void / open space off the rainbow track) */
+  if(isVoidTheme()) return 'water';
   /* Oak Ridge: a band of thick HIGH ROUGH starts ~20yd outside the fairway, to stop
      players from simply walking it around the creeks. */
   if(THEME()==='oak' && ds > FAIRWAY_W + HIGH_ROUGH_PX) return 'highrough';
@@ -3523,12 +3585,144 @@ const HOLES8 = [
   boulders:[{x:560,y:320,r:28}]}
 ];
 
+/* ===== TWISTER (Rainbow Road) — the Reckoning's third and final world. A neon ribbon-track
+   adrift in deep space: extreme fairway tilts, giant violently-sloped greens, no rough (off
+   the track is the void). Par 34. Harder than Galaxy in every way — the fall lines bite. ===== */
+const HOLES9 = [
+ /* 1 — Liftoff · P4 · a sweeping right-bender that tilts HARD down-right toward the void the
+        whole way; giant green crowned so putts run off every edge. */
+ {name:'Liftoff', par:4, windMax:0, tee:{x:150,y:300}, fw:80, pin:{x:760,y:430}, windDir:0,
+  fwSlope:{dx:0.5,dy:0.5,s:0.95},
+  slopeZones:[{x:380,y:330,r:130,dx:0.6,dy:0.7,s:1.0},{x:600,y:300,r:130,dx:0.7,dy:0.3,s:0.95}],
+  green:{lobes:[{x:760,y:430,r:88},{x:700,y:386,r:64},{x:820,y:386,r:62},{x:760,y:520,r:58}],
+         slope:{dx:0.2,dy:0.5,s:0.46}, flat:{r:34,f:0.4},
+         features:[{type:'ridge',x:760,y:430,dx:1,dy:0.4,h:13,w:30},{type:'bowl',x:712,y:470,r:26,h:-7}]},
+  spine:[{x:150,y:300},{x:340,y:400},{x:520,y:340},{x:660,y:390},{x:760,y:430}],
+  waters:[],
+  bunkers:[{x:600,y:340,rx:38,ry:22,rot:0.5}],
+  trees:[],
+  boulders:[]},
+
+ /* 2 — Prism Drop · P3 · a steep diagonal drop-shot across the void to a giant green that
+        spills toward the back-left; only a held line stays on. */
+ {name:'Prism Drop', par:3, windMax:0, tee:{x:760,y:130}, fw:74, pin:{x:470,y:470}, windDir:0,
+  green:{lobes:[{x:470,y:470,r:86},{x:416,y:426,r:60},{x:524,y:426,r:60},{x:470,y:556,r:48}],
+         slope:{dx:-0.45,dy:0.45,s:0.5}, flat:{r:32,f:0.38},
+         features:[{type:'tier',x:470,y:470,dx:-1,dy:0.3,h:14,w:28},{type:'bowl',x:470,y:470,r:30,h:9}]},
+  spine:[{x:760,y:130},{x:620,y:310},{x:470,y:458}],
+  waters:[],
+  bunkers:[{x:524,y:430,rx:30,ry:19,rot:0.3}],
+  trees:[],
+  boulders:[]},
+
+ /* 3 — The Coil · P4 · a true spiral: out right, curl up and back hard left around a boulder
+        knot to a high-center green that tilts down toward the tee. Brutal placement hole. */
+ {name:'The Coil', par:4, windMax:0, tee:{x:780,y:470}, fw:78, pin:{x:520,y:160}, windDir:0,
+  fwSlope:{dx:0.4,dy:0.5,s:0.9},
+  slopeZones:[{x:360,y:430,r:120,dx:-0.6,dy:-0.4,s:1.0},{x:300,y:250,r:120,dx:0.8,dy:-0.2,s:1.0},
+              {x:560,y:230,r:110,dx:0.5,dy:0.6,s:0.95}],
+  green:{lobes:[{x:520,y:160,r:86},{x:468,y:204,r:60},{x:572,y:204,r:60},{x:520,y:80,r:56}],
+         slope:{dx:-0.1,dy:0.55,s:0.48}, flat:{r:34,f:0.4},
+         features:[{type:'ridge',x:520,y:160,dx:0,dy:1,h:13,w:30},{type:'bowl',x:466,y:198,r:24,h:-7}]},
+  spine:[{x:780,y:470},{x:520,y:440},{x:320,y:360},{x:300,y:230},{x:520,y:172}],
+  waters:[],
+  bunkers:[{x:400,y:300,rx:34,ry:20,rot:-0.4}],
+  trees:[],
+  boulders:[{x:280,y:300,r:26},{x:256,y:262,r:18}]},
+
+ /* 4 — Freefall · P5 · the long one: a steep down-then-up rollercoaster ribbon from top-left
+        all the way to a giant green low-right that crowns hard. Three honest, scary shots. */
+ {name:'Freefall', par:5, windMax:0, tee:{x:140,y:430}, fw:80, pin:{x:830,y:430}, windDir:0,
+  fwSlope:{dx:0.2,dy:0.0,s:0.7},
+  slopeZones:[{x:330,y:200,r:130,dx:0.3,dy:0.95,s:1.05},{x:540,y:430,r:130,dx:0.3,dy:-0.85,s:0.95},
+              {x:720,y:240,r:120,dx:0.5,dy:0.9,s:1.0}],
+  green:{lobes:[{x:830,y:430,r:88},{x:772,y:388,r:64},{x:888,y:388,r:60},{x:830,y:516,r:52}],
+         slope:{dx:0.3,dy:0.45,s:0.46}, flat:{r:34,f:0.4},
+         features:[{type:'ridge',x:830,y:430,dx:0.6,dy:0.5,h:14,w:32},{type:'bowl',x:782,y:466,r:26,h:-7}]},
+  spine:[{x:140,y:430},{x:330,y:180},{x:520,y:430},{x:710,y:200},{x:830,y:430}],
+  waters:[],
+  bunkers:[{x:430,y:300,rx:40,ry:24,rot:0.3},{x:884,y:388,rx:22,ry:15,rot:0.2}],
+  trees:[],
+  boulders:[{x:620,y:320,r:18}]},
+
+ /* 5 — Hairpin · P3 · short but vicious: a sharp dogleg-left over the void to a giant green
+        canted steeply left-to-right so anything long-right is gone. */
+ {name:'Hairpin', par:3, windMax:0, tee:{x:240,y:200}, fw:72, pin:{x:560,y:430}, windDir:0,
+  green:{lobes:[{x:560,y:430,r:86},{x:506,y:386,r:60},{x:614,y:386,r:58},{x:560,y:520,r:54}],
+         slope:{dx:0.6,dy:0.2,s:0.52}, flat:{r:30,f:0.38},
+         features:[{type:'tier',x:560,y:430,dx:1,dy:0,h:14,w:28},{type:'bowl',x:520,y:430,r:24,h:8}]},
+  spine:[{x:240,y:200},{x:300,y:380},{x:560,y:430}],
+  waters:[],
+  bunkers:[{x:612,y:392,rx:28,ry:18,rot:0.3}],
+  trees:[],
+  boulders:[{x:380,y:300,r:16}]},
+
+ /* 6 — Slingshot · P4 · a long left-to-right sweeper that tilts down-right the entire way,
+        finishing at a giant green perched on the right edge of the world. */
+ {name:'Slingshot', par:4, windMax:0, tee:{x:160,y:230}, fw:80, pin:{x:800,y:230}, windDir:0,
+  fwSlope:{dx:0.3,dy:0.3,s:0.9},
+  slopeZones:[{x:400,y:430,r:140,dx:-0.2,dy:-0.9,s:1.05},{x:640,y:430,r:140,dx:0.5,dy:-0.7,s:1.0}],
+  green:{lobes:[{x:800,y:230,r:88},{x:746,y:274,r:62},{x:746,y:186,r:60},{x:864,y:230,r:54}],
+         slope:{dx:0.45,dy:0.3,s:0.48}, flat:{r:34,f:0.4},
+         features:[{type:'ridge',x:800,y:230,dx:1,dy:0.2,h:13,w:30},{type:'bowl',x:760,y:266,r:24,h:-7}]},
+  spine:[{x:160,y:230},{x:340,y:420},{x:530,y:470},{x:700,y:380},{x:800,y:248}],
+  waters:[],
+  bunkers:[{x:530,y:430,rx:38,ry:22,rot:0.2},{x:846,y:272,rx:22,ry:15,rot:-0.2}],
+  trees:[],
+  boulders:[{x:470,y:440,r:20}]},
+
+ /* 7 — Zero-G · P3 · a near-vertical plunge straight down the middle to a giant green that
+        falls away to the back; pace it perfectly or watch it trickle off into space. */
+ {name:'Zero-G', par:3, windMax:0, tee:{x:540,y:160}, fw:74, pin:{x:560,y:460}, windDir:0,
+  fwSlope:{dx:0.7,dy:0.4,s:0.9},
+  slopeZones:[{x:780,y:300,r:130,dx:0.9,dy:0.0,s:1.0},{x:680,y:440,r:120,dx:-0.6,dy:0.5,s:1.0}],
+  green:{lobes:[{x:560,y:460,r:88},{x:504,y:418,r:60},{x:616,y:418,r:60},{x:560,y:516,r:50}],
+         slope:{dx:-0.5,dy:0.25,s:0.52}, flat:{r:32,f:0.38},
+         features:[{type:'tier',x:560,y:460,dx:-1,dy:0,h:14,w:28},{type:'bowl',x:560,y:432,r:26,h:9}]},
+  spine:[{x:540,y:160},{x:780,y:280},{x:740,y:430},{x:560,y:460}],
+  waters:[],
+  bunkers:[{x:614,y:420,rx:34,ry:20,rot:-0.3},{x:504,y:460,rx:24,ry:16,rot:0.3}],
+  trees:[],
+  boulders:[{x:760,y:340,r:18}]},
+
+ /* 8 — Comet Run · P4 · a wide S that snakes down-right then back down-left, both legs tilted
+        hard outward, to a giant green low-center-left. Keep it on the ribbon. */
+ {name:'Comet Run', par:4, windMax:0, tee:{x:480,y:140}, fw:80, pin:{x:200,y:470}, windDir:0,
+  fwSlope:{dx:-0.4,dy:0.5,s:0.92},
+  slopeZones:[{x:680,y:260,r:130,dx:0.8,dy:0.3,s:1.0},{x:520,y:430,r:130,dx:-0.9,dy:0.2,s:1.0}],
+  green:{lobes:[{x:200,y:470,r:88},{x:256,y:428,r:62},{x:256,y:512,r:60},{x:200,y:382,r:56}],
+         slope:{dx:0.45,dy:-0.3,s:0.48}, flat:{r:34,f:0.4},
+         features:[{type:'tier',x:200,y:470,dx:1,dy:-0.3,h:14,w:30},{type:'bowl',x:252,y:466,r:24,h:-7}]},
+  spine:[{x:480,y:140},{x:700,y:280},{x:560,y:420},{x:360,y:450},{x:200,y:470}],
+  waters:[],
+  bunkers:[{x:600,y:360,rx:38,ry:22,rot:0.4},{x:254,y:428,rx:22,ry:15,rot:-0.2}],
+  trees:[],
+  boulders:[{x:680,y:300,r:20}]},
+
+ /* 9 — Twister · P4 · the namesake closer: a full corkscrew climb — right, up, hard back
+        across the top to a giant tiered green high-left perched at the edge of everything.
+        Extreme tilt the whole way. Finish it and the Reckoning is yours. */
+ {name:'Twister', par:4, windMax:0, tee:{x:200,y:480}, fw:80, pin:{x:230,y:170}, windDir:0,
+  fwSlope:{dx:0.3,dy:0.5,s:0.95},
+  slopeZones:[{x:560,y:440,r:130,dx:0.7,dy:-0.4,s:1.05},{x:720,y:280,r:120,dx:-0.6,dy:-0.5,s:1.0},
+              {x:460,y:240,r:120,dx:-0.7,dy:0.4,s:1.0}],
+  green:{lobes:[{x:230,y:170,r:90},{x:288,y:212,r:64},{x:288,y:128,r:62},{x:172,y:212,r:58},{x:172,y:128,r:56}],
+         slope:{dx:0.35,dy:0.4,s:0.5}, flat:{r:36,f:0.42},
+         features:[{type:'tier',x:230,y:170,dx:0,dy:-1,h:15,w:32},{type:'ridge',x:230,y:200,dx:1,dy:0,h:12,w:28},
+                   {type:'bowl',x:286,y:206,r:24,h:-8}]},
+  spine:[{x:200,y:480},{x:470,y:440},{x:680,y:360},{x:700,y:230},{x:470,y:200},{x:230,y:192}],
+  waters:[],
+  bunkers:[{x:600,y:320,rx:36,ry:21,rot:0.4},{x:286,y:206,rx:22,ry:15,rot:0.2}],
+  trees:[],
+  boulders:[{x:720,y:300,r:24}]}
+];
+
 /* ===== GOLF TOURS: each tour groups courses. Score a birdie (or better) somewhere in a
    tour to unlock the next. New maps slot in by adding their COURSES[] index to a tour. ===== */
 const TOURS = [
   { id:'sunrise', name:'Sunrise Tour',     tagline:'Where every legend tees off',   courses:[0,4,5] },
   { id:'snail',   name:'Golden Snail Tour', tagline:'Slow and steady wins the green', courses:[1,3,6] },
-  { id:'reckoning', name:"The Reckoning",   tagline:'Only the fearless finish',       courses:[2,8] }
+  { id:'reckoning', name:"The Reckoning",   tagline:'Only the fearless finish',       courses:[2,8,9] }
 ];
 let tourIdx = 0;   /* which tour is currently being viewed */
 /* per-tour birdie flag: set true when a birdie or better is scored on any of the tour's holes */
@@ -3586,7 +3780,8 @@ const COURSES = [
   {name:'Mirage Dunes',        holes:HOLES6, theme:'savanna'},
   {name:'Timberline Grand',    holes:HOLES7, theme:'maple'},
   {name:'Practice',            holes:PRACTICE_HOLES, theme:'sakura'},
-  {name:'Galaxy Falls',        holes:HOLES8, theme:'galaxy'}
+  {name:'Galaxy Falls',        holes:HOLES8, theme:'galaxy'},
+  {name:'Twister',             holes:HOLES9, theme:'twister'}
 ];
 const PRACTICE_CI = 7;          /* index of the practice course */
 let practiceMode = false;
@@ -3598,8 +3793,9 @@ function THEME(){ return COURSES[courseIdx].theme; }
 /* "void" themes render the holes as floating islands surrounded by OOB (no rough): the lava
    Volcano world and the deep-space Galaxy world share that geometry. isGalaxy() switches the
    palette (cosmic emerald/violet) where it differs from lava. */
-function isVoidTheme(){ const t=THEME(); return t==='volcano' || t==='galaxy'; }
+function isVoidTheme(){ const t=THEME(); return t==='volcano' || t==='galaxy' || t==='twister'; }
 function isGalaxy(){ return THEME()==='galaxy'; }
+function isTwister(){ return THEME()==='twister'; }
 /* theme-aware fairway grass color — most courses use the standard green; the Glades
    (Golden Snail) course uses a richer jade/emerald to feel distinct and exotic */
 function FAIRWAY_COLOR(){
@@ -3607,6 +3803,7 @@ function FAIRWAY_COLOR(){
     case 'glade':  return '#3fa56a';   /* deep jade-emerald wetland turf */
     case 'savanna':return '#7cc24a';   /* bright sunlit lime — fun, vivid eucalyptus country */
     case 'galaxy': return '#2fae7a';   /* glowing cosmic emerald floating turf */
+    case 'twister':return '#ff4fa3';   /* neon rainbow-track pink (green apron blend) */
     default:       return '#5fa953';
   }
 }
@@ -3906,7 +4103,7 @@ function setMatrix(on){
   }catch(e){}
 }
 let stats = {bestRound:null, bestStreak:0, bestBirdieStreak:0,
-  bests:[null,null,null,null,null,null,null,null,null], holesDone:[0,0,0,0,0,0,0,0,0], rounds:[0,0,0,0,0,0,0,0,0], totalStrokes:0, totalHoles:0,
+  bests:[null,null,null,null,null,null,null,null,null,null], holesDone:[0,0,0,0,0,0,0,0,0,0], rounds:[0,0,0,0,0,0,0,0,0,0], totalStrokes:0, totalHoles:0,
   lifetimeBirdies:0, lbName:null, lbBirdiesSent:0, lbHolesSent:0,    /* global leaderboard: lifetime birdies + holes, and how many already submitted */
   challenges:{}, coins:1000, ownedSkins:['white'], equippedSkin:'white', tourBirdie:{}, matrix:false};  /* everyone starts with 1000 coins to buy a custom ball */
 
@@ -3932,7 +4129,10 @@ function loadProgress(){
       if(!stats.ownedSkins || !stats.ownedSkins.length) stats.ownedSkins = ['white'];
       if(!stats.equippedSkin) stats.equippedSkin = 'white';
       if(typeof stats.coins !== 'number') stats.coins = 1000;
-      TESTING = !!stats.matrix;        /* restore MATRIX mode if it was enabled on this device */
+      /* MATRIX is a per-session cheat: it must be re-entered with the secret code every launch,
+         so the game never STARTS in matrix mode even if it was on when you last closed it. */
+      stats.matrix = false;
+      TESTING = false;
     }
     if(data && data.set && typeof SET!=='undefined'){ Object.assign(SET, data.set); }
     if(data && data.name && typeof window!=='undefined') window._savedName = data.name;
@@ -3947,7 +4147,7 @@ const LB_BASE = (location.protocol==='https:'?'https':'http') + '://' + LB_HOST;
 function lbName(){
   return (stats.lbName || window._savedName || 'Player').toString().slice(0,14);
 }
-async function lbSubmit(bestRound){
+async function lbSubmit(bestRound, force){
   try{
     const already = stats.lbBirdiesSent||0;
     const have = stats.lifetimeBirdies||0;
@@ -3955,10 +4155,13 @@ async function lbSubmit(bestRound){
     const holesHave = stats.totalHoles||0;               // lifetime holes played
     const holesSent = stats.lbHolesSent||0;
     const holesDelta = Math.max(0, holesHave - holesSent);
-    if(delta<=0 && holesDelta<=0 && bestRound==null) return null;   // nothing new to send
+    /* `force` registers the player on the board even with nothing new to report, so anyone who
+       has set a name appears globally (otherwise a player who hasn't birdied/finished a round
+       would never be submitted and would stay invisible). */
+    if(!force && delta<=0 && holesDelta<=0 && bestRound==null) return null;   // nothing new to send
     const res = await fetch(LB_BASE + '/leaderboard', {
       method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ name: lbName(), birdies: delta, holes: holesDelta, bestRound: bestRound ?? null })
+      body: JSON.stringify({ name: lbName(), birdies: delta, holes: holesDelta, bestRound: bestRound ?? null, register: !!force })
     });
     if(!res.ok) return null;
     const data = await res.json();
@@ -5276,7 +5479,7 @@ function applySlopeAndRim(o, sf, speed, dt){
     /* honest gravity along the fall line, ALWAYS active on a real slope (not gated by speed)
        so the ball keeps trickling to the low point and never freezes mid-hill — like a real
        ball on a true green. Volcano greens are steeper. */
-    const gScale = isVoidTheme() ? SLOPE_G*1.35 : SLOPE_G;
+    const gScale = isTwister() ? SLOPE_G*1.6 : isVoidTheme() ? SLOPE_G*1.35 : SLOPE_G;
     if(speed>4){
       /* MOVING: gravity along travel + a BREAK (lateral) that bites harder as the ball dies,
          giving the natural late curve toward the hole. */
@@ -5667,6 +5870,7 @@ function shadeColor(t, lam=0){
   let lo=[70,138,66], hi=[182,228,150];               /* natural bent-grass range */
   if(THEME()==='volcano'){ lo=[58,70,40]; hi=[140,138,70]; }   /* scorched olive-brown turf */
   else if(THEME()==='galaxy'){ lo=[26,110,84]; hi=[110,236,180]; }  /* glowing cosmic emerald green */
+  else if(THEME()==='twister'){ lo=[40,150,200]; hi=[180,255,255]; }  /* electric candy-cyan green */
   else if(THEME()==='maple'){ lo=[54,128,58], hi=[150,214,120]; }  /* lush, deep mountain-valley turf */
   let r=lo[0]+(hi[0]-lo[0])*t, g=lo[1]+(hi[1]-lo[1])*t, b=lo[2]+(hi[2]-lo[2])*t;
   const k = 1 + lam*0.34;
@@ -5702,7 +5906,10 @@ function draw(now){
   /* sky + distant hills */
   /* graded atmosphere: deep zenith → warm hazed horizon */
   const sky = ctx.createLinearGradient(0,0,0,Math.max(hy,1));
-  if(isGalaxy()){
+  if(isTwister()){
+    sky.addColorStop(0,'#0a0520'); sky.addColorStop(0.45,'#1a0a3e');
+    sky.addColorStop(0.78,'#3a1166'); sky.addColorStop(1,'#5e1a8a');   /* deep space → rainbow nebula */
+  } else if(isGalaxy()){
     sky.addColorStop(0,'#05030f'); sky.addColorStop(0.5,'#0c0822');
     sky.addColorStop(0.82,'#160d36'); sky.addColorStop(1,'#20114a');   /* deep space → nebula */
   } else if(THEME()==='volcano'){
@@ -5721,29 +5928,38 @@ function draw(now){
     let sx = ((0.8 - cam.yaw*0.9)/(Math.PI*2))*(W*2.4);
     sx = ((sx % (W*2.4)) + W*2.4) % (W*2.4) - W*0.7;
     const sy = Math.max(hy-86,30);
-    if(isGalaxy()){
-      /* GALAXY SUN: a radiant cosmic star — white-hot core, emerald inner corona, violet
-         outer halo, with a slow pulse and faint ringed glow. */
+    if(isGalaxy() || isTwister()){
+      /* a radiant star: galaxy = emerald/violet, twister = full prismatic rainbow corona */
       const pulse = 0.5+0.5*Math.sin(curNow/1500);
       const R = 150+pulse*22;
       const halo = ctx.createRadialGradient(sx,sy,6, sx,sy,R);
-      halo.addColorStop(0,'rgba(255,255,255,.95)');
-      halo.addColorStop(0.14,'rgba(150,255,210,.7)');
-      halo.addColorStop(0.4,'rgba(90,200,255,.28)');
-      halo.addColorStop(0.7,'rgba(150,90,255,.16)');
-      halo.addColorStop(1,'rgba(120,60,200,0)');
+      if(isTwister()){
+        halo.addColorStop(0,'rgba(255,255,255,.95)');
+        halo.addColorStop(0.12,'rgba(255,120,200,.6)');
+        halo.addColorStop(0.32,'rgba(255,200,80,.34)');
+        halo.addColorStop(0.55,'rgba(90,230,255,.26)');
+        halo.addColorStop(0.78,'rgba(150,90,255,.18)');
+        halo.addColorStop(1,'rgba(120,60,200,0)');
+      } else {
+        halo.addColorStop(0,'rgba(255,255,255,.95)');
+        halo.addColorStop(0.14,'rgba(150,255,210,.7)');
+        halo.addColorStop(0.4,'rgba(90,200,255,.28)');
+        halo.addColorStop(0.7,'rgba(150,90,255,.16)');
+        halo.addColorStop(1,'rgba(120,60,200,0)');
+      }
       ctx.fillStyle=halo; ctx.fillRect(sx-R,sy-R,R*2,R*2);
       /* a faint orbital ring around the star */
       ctx.save();
       ctx.globalAlpha=0.4+0.2*pulse;
-      ctx.strokeStyle='rgba(170,255,225,.5)'; ctx.lineWidth=2;
+      ctx.strokeStyle = isTwister() ? 'rgba(255,180,230,.55)' : 'rgba(170,255,225,.5)'; ctx.lineWidth=2;
       ctx.beginPath(); ctx.ellipse(sx,sy,52,16,0.5,0,Math.PI*2); ctx.stroke();
+      if(isTwister()){ ctx.strokeStyle='rgba(150,220,255,.45)'; ctx.beginPath(); ctx.ellipse(sx,sy,52,16,-0.5,0,Math.PI*2); ctx.stroke(); }
       ctx.restore();
       /* white-hot core */
       const core = ctx.createRadialGradient(sx,sy,2, sx,sy,26);
       core.addColorStop(0,'rgba(255,255,255,1)');
-      core.addColorStop(0.6,'rgba(190,255,230,.95)');
-      core.addColorStop(1,'rgba(120,255,200,.2)');
+      core.addColorStop(0.6, isTwister() ? 'rgba(255,225,245,.95)' : 'rgba(190,255,230,.95)');
+      core.addColorStop(1, isTwister() ? 'rgba(255,160,220,.2)' : 'rgba(120,255,200,.2)');
       ctx.fillStyle=core; ctx.beginPath(); ctx.arc(sx,sy,24,0,Math.PI*2); ctx.fill();
     } else {
       const bloom = ctx.createRadialGradient(sx,sy,4, sx,sy,120);
@@ -5755,8 +5971,8 @@ function draw(now){
       ctx.beginPath(); ctx.arc(sx, sy, 19, 0, Math.PI*2); ctx.fill();
     }
   }
-  /* clouds: soft multi-lobe masses with shaded undersides (none in the galaxy void) */
-  if(!isGalaxy()) clouds.forEach(c=>{
+  /* clouds: soft multi-lobe masses with shaded undersides (none in the galaxy/twister void) */
+  if(!isGalaxy() && !isTwister()) clouds.forEach(c=>{
     let x = ((c.a - cam.yaw*c.d)/(Math.PI*2))*(W*2.4);
     x = ((x % (W*2.4)) + W*2.4) % (W*2.4) - W*0.7;
     const y = hy - c.h + Math.sin(now/4000+c.a)*3;
@@ -5813,7 +6029,12 @@ function draw(now){
   /* ground */
   const gnd = ctx.createLinearGradient(0,hy,0,H);
   const volc = isVoidTheme();      /* floating-island world: lava OR galaxy void */
-  if(isGalaxy()){
+  if(isTwister()){
+    gnd.addColorStop(0,'#0e0526');                     /* deep space distance    */
+    gnd.addColorStop(0.3,'#1c0a44');
+    gnd.addColorStop(0.6,'#2e1060');
+    gnd.addColorStop(1,'#451878');                     /* rainbow-violet near cam */
+  } else if(isGalaxy()){
     gnd.addColorStop(0,'#0a0418');                     /* deep space distance   */
     gnd.addColorStop(0.3,'#140a2e');
     gnd.addColorStop(0.6,'#1d1040');
@@ -5842,19 +6063,21 @@ function draw(now){
     gnd.addColorStop(1,'#499845');
   }
   ctx.fillStyle=gnd; ctx.fillRect(-20,Math.max(hy,0),W+40,H-Math.max(hy,0)+20);
-  if(isGalaxy()){
-    /* ===== galaxy void: a field of stars + soft nebula glow over the deep-space ground ===== */
+  if(isGalaxy() || isTwister()){
+    /* ===== void: a field of stars + soft nebula glow over the deep-space ground ===== */
     const gy0=Math.max(hy,0);
     ctx.save();
     ctx.beginPath(); ctx.rect(-20,gy0,W+40,H-gy0+20); ctx.clip();
-    /* soft nebula clouds (emerald + violet), additive */
+    /* soft nebula clouds, additive — galaxy = emerald/violet, twister = full rainbow */
     ctx.globalCompositeOperation='lighter';
-    const neb=[['64,255,170',0.07],['150,90,255',0.06],['80,160,255',0.05]];
-    for(let b=0;b<3;b++){
+    const neb = isTwister()
+      ? [['255,90,170',0.07],['255,200,80',0.05],['90,200,255',0.06],['150,90,255',0.05]]
+      : [['64,255,170',0.07],['150,90,255',0.06],['80,160,255',0.05]];
+    for(let b=0;b<neb.length;b++){
       const pulse=0.5+0.5*Math.sin(curNow/2600 + b*2.1);
-      const bx=W*(0.2+0.62*((b*0.41)%1));
+      const bx=W*(0.18+0.66*((b*0.41)%1));
       const by=gy0+(H-gy0)*(0.3+0.62*((b*0.5)%1));
-      const rad=200+b*60;
+      const rad=200+b*55;
       const g=ctx.createRadialGradient(bx,by,10,bx,by,rad);
       g.addColorStop(0,`rgba(${neb[b][0]},${neb[b][1]*(0.7+0.6*pulse)})`);
       g.addColorStop(1,`rgba(${neb[b][0]},0)`);
@@ -5872,7 +6095,7 @@ function draw(now){
     ctx.globalCompositeOperation='source-over';
     ctx.restore();
   }
-  if(volc && !isGalaxy()){
+  if(volc && !isGalaxy() && !isTwister()){
     /* ===== cooled-crust lava field (cached texture + cheap live glow) =====
        The dark plate texture is screen-fixed, so it's baked once to an offscreen
        canvas and blitted. Only a few large soft glow bands animate on top. */
@@ -5962,10 +6185,88 @@ function draw(now){
   }
   /* creek-source hill cluster removed: pinned world hills fight the camera. The horizon
      mountain range (drawMountains) is the backdrop the creeks read as flowing from. */
-  if(isGalaxy()){
-    /* GALAXY FAIRWAY as a floating island adrift in the void: a dark cosmic rim drops from
-       the fairway edge into space, then the tilted galaxy-turf surface on top (slopes show,
-       since galaxy fairways are steep). */
+  if(isTwister()){
+    /* TWISTER FAIRWAY as a RAINBOW ROAD ribbon adrift in space: a dark space rim drops into
+       the void, neon rails light the edges, and the tilted track is painted in rainbow bands
+       that run ALONG its length — the signature N64 Rainbow Road look. */
+    const fp = POLY.fairway;
+    if(fp && fp.length>2){
+      const fc={x:0,y:0}; fp.forEach(p=>{fc.x+=p.x;fc.y+=p.y;}); fc.x/=fp.length; fc.y/=fp.length;
+      const expandF=(out)=> fp.map(p=>{
+        const dx=p.x-fc.x, dy=p.y-fc.y, d=Math.hypot(dx,dy)||1;
+        return {x:p.x+dx/d*out, y:p.y+dy/d*out};
+      });
+      /* dark space rim dropping into the void (kept subtle so the rainbow reads) */
+      const frings=[{out:6,col:'#241640'},{out:14,col:'#180e30'},{out:22,col:'#0e0822'},{out:27,col:'#2a1858'}];
+      for(let r=frings.length-1;r>=0;r--){
+        const outer=expandF(frings[r].out), inner=expandF(r?frings[r-1].out:0);
+        for(let i=0;i<fp.length;i++){ const j=(i+1)%fp.length;
+          fillGround([outer[i],outer[j],inner[j],inner[i]], frings[r].col); }
+      }
+    }
+    /* base track fill (dark) so any seams read as deep space, then rainbow bands on top */
+    fillGround(POLY.fairway, '#1a1140');
+    if(SPINE && SPINE.length>1){
+      /* RAINBOW BANDS: walk the spine; at each step lay a tilted quad spanning the track width,
+         colored by a hue that cycles ALONG the track so stripes run lengthwise like Rainbow Road.
+         The bands ride fairwayHeightVis so the extreme tilt shows as real 3D banking. */
+      const RAINBOW = ['#ff3b6b','#ff8a3b','#ffe23b','#3bff7a','#3bd4ff','#6a5bff','#c95bff'];
+      const STEPS = SET.quality==='high' ? 5 : 3;
+      let bandIdx = 0;
+      for(let si=0; si<SPINE.length-1; si++){
+        const a=SPINE[si], b=SPINE[si+1];
+        let nx=-(b.y-a.y), ny=(b.x-a.x); const nn=Math.hypot(nx,ny)||1; nx/=nn; ny/=nn;
+        const segLen=Math.hypot(b.x-a.x,b.y-a.y);
+        const along=Math.max(1, Math.round(segLen/22));   /* finer steps → smoother stripes */
+        for(let u=0; u<along; u++){
+          const t0=u/along, t1=(u+1)/along;
+          const cx0=a.x+(b.x-a.x)*t0, cy0=a.y+(b.y-a.y)*t0;
+          const cx1=a.x+(b.x-a.x)*t1, cy1=a.y+(b.y-a.y)*t1;
+          const col = RAINBOW[bandIdx % RAINBOW.length]; bandIdx++;
+          for(let v=-STEPS; v<STEPS; v++){
+            const w0=v/STEPS*FAIRWAY_W, w1=(v+1)/STEPS*FAIRWAY_W;
+            const quad=[
+              {x:cx0+nx*w0,y:cy0+ny*w0},{x:cx1+nx*w0,y:cy1+ny*w0},
+              {x:cx1+nx*w1,y:cy1+ny*w1},{x:cx0+nx*w1,y:cy0+ny*w1}
+            ];
+            fillGroundH(quad, col, fairwayHeightVis);
+          }
+        }
+      }
+      /* a soft white center line shimmering down the middle of the track */
+      if(SET.quality==='high'){
+        ctx.save(); ctx.globalAlpha=0.5;
+        for(let si=0; si<SPINE.length-1; si++){
+          const a=SPINE[si], b=SPINE[si+1];
+          const sa=proj(a.x,a.y,fairwayHeightVis(a.x,a.y)), sb=proj(b.x,b.y,fairwayHeightVis(b.x,b.y));
+          if(sa&&sb){ ctx.strokeStyle='rgba(255,255,255,.5)'; ctx.lineWidth=2; ctx.beginPath(); ctx.moveTo(sa.x,sa.y); ctx.lineTo(sb.x,sb.y); ctx.stroke(); }
+        }
+        ctx.restore();
+      }
+      /* NEON RAILS: glowing edge lines down both sides of the track */
+      const railOff = FAIRWAY_W;
+      for(const side of [-1,1]){
+        const pts=[];
+        for(let si=0; si<SPINE.length; si++){
+          const a=SPINE[si];
+          const pPrev=SPINE[Math.max(0,si-1)], pNext=SPINE[Math.min(SPINE.length-1,si+1)];
+          let nx=-(pNext.y-pPrev.y), ny=(pNext.x-pPrev.x); const nn=Math.hypot(nx,ny)||1; nx/=nn; ny/=nn;
+          const ex=a.x+nx*side*railOff, ey=a.y+ny*side*railOff;
+          const sp=proj(ex,ey, fairwayHeightVis(ex,ey));
+          if(sp) pts.push(sp);
+        }
+        if(pts.length>1){
+          ctx.save();
+          ctx.lineJoin='round'; ctx.lineCap='round';
+          ctx.strokeStyle='rgba(120,220,255,.35)'; ctx.lineWidth=6;
+          ctx.beginPath(); pts.forEach((s,k)=>k?ctx.lineTo(s.x,s.y):ctx.moveTo(s.x,s.y)); ctx.stroke();
+          ctx.strokeStyle='rgba(255,255,255,.9)'; ctx.lineWidth=2;
+          ctx.beginPath(); pts.forEach((s,k)=>k?ctx.lineTo(s.x,s.y):ctx.moveTo(s.x,s.y)); ctx.stroke();
+          ctx.restore();
+        }
+      }
+    }
+  } else if(isGalaxy()){
     const fp = POLY.fairway;
     if(fp && fp.length>2){
       const fc={x:0,y:0}; fp.forEach(p=>{fc.x+=p.x;fc.y+=p.y;}); fc.x/=fp.length; fc.y/=fp.length;
@@ -6070,7 +6371,7 @@ function draw(now){
      The base bands render at EVERY quality level so the fairway always shows its stripes
      (previously they vanished whenever auto-quality dropped to 'low', making the fairway
      look like one flat green). Only the fine directional grain is gated to high quality. */
-  if(MOW_BANDS.length){
+  if(MOW_BANDS.length && !isTwister()){
     const fwH = (!isVoidTheme() && CUR && (CUR.fwSlope||CUR.slopeZones)) ? fairwayHeightVis :
                 (isGalaxy() && CUR && (CUR.fwSlope||CUR.slopeZones)) ? fairwayHeightVis : (()=>0);
     MOW_BANDS.forEach((band,bi)=>{
@@ -6430,9 +6731,9 @@ function draw(now){
       }
     }
   }
-  /* GALAXY SHELF: the green floats on a cosmic rock shelf that drops into the void —
-     green → dark cosmic rock → glowing emerald rim → space. */
-  if(isGalaxy() && POLY.green && POLY.green.length>2){
+  /* VOID SHELF: the green floats on a rock shelf that drops into the void. Galaxy = cosmic
+     emerald rim; Twister = neon rainbow rim. */
+  if((isGalaxy() || isTwister()) && POLY.green && POLY.green.length>2){
     const gc={x:0,y:0}; POLY.green.forEach(p=>{gc.x+=p.x;gc.y+=p.y;});
     gc.x/=POLY.green.length; gc.y/=POLY.green.length;
     const expand=(out)=> POLY.green.map(p=>{
@@ -6440,9 +6741,17 @@ function draw(now){
       return {x:p.x+dx/d*out, y:p.y+dy/d*out};
     });
     /* No flat shadow-halo here: against the dark void a fixed-height halo pokes out unevenly
-       past the tilted rim and reads as a stray dark blob. The cosmic rock rings below (which
-       ride the green's actual surface height) form the floating base on their own. */
-    const rings=[
+       past the tilted rim and reads as a stray dark blob. The rock rings below (which ride the
+       green's actual surface height) form the floating base on their own. */
+    const rings = isTwister() ? [
+      {out:8,  col:'#ff4fa3'},          /* neon collar just off the green */
+      {out:18, col:'#2a1858'},          /* space rock */
+      {out:30, col:'#1a0e3a'},          /* darker rock (shelf lip) */
+      {out:48, col:'#0e0826'},          /* deep cliff face */
+      {out:60, col:'#3a1866'},          /* warming toward the rim */
+      {out:66, col:'#6a22aa'},          /* violet-edged rock */
+      {out:72, col:'#ff6ad5'}           /* glowing rainbow-pink rim */
+    ] : [
       {out:8,  col:'#1f6e54'},          /* emerald collar just off the green */
       {out:18, col:'#2a2348'},          /* cosmic rock */
       {out:30, col:'#1d1838'},          /* darker rock (shelf lip) */
@@ -6473,7 +6782,7 @@ function draw(now){
       const pp=rim.map(p=>proj(p.x,p.y,surfaceHeightVis(p.x,p.y))).filter(Boolean);
       if(pp.length>2){
         const glow=0.4+0.3*Math.sin(now/280);
-        ctx.strokeStyle=`rgba(60,255,170,${glow})`; ctx.lineWidth=1.6;
+        ctx.strokeStyle = isTwister() ? `rgba(255,120,220,${glow})` : `rgba(60,255,170,${glow})`; ctx.lineWidth=1.6;
         ctx.beginPath(); pp.forEach((s,k)=>k?ctx.lineTo(s.x,s.y):ctx.moveTo(s.x,s.y));
         ctx.closePath(); ctx.stroke();
       }
@@ -6572,10 +6881,36 @@ function draw(now){
       }
       ctx.restore();
     }
+  } else if(isTwister()){
+    fillGroundH(POLY.fringe, '#ff79c4', surfaceHeightVis);
+    fillGroundH(POLY.green, '#46e6ff', surfaceHeightVis);     /* electric candy-cyan green */
+    /* vivid slope shading: bright cyan-white high side → deep magenta-violet low side, so the
+       extreme tilt reads dramatically (these greens slope hard). */
+    if(pathGroundH(POLY.green, surfaceHeightVis)){
+      ctx.save(); ctx.clip();
+      const gb=greenBBox(0), gcx=(gb.x0+gb.x1)/2, gcy=(gb.y0+gb.y1)/2;
+      const sl=GREEN.slope, m=Math.hypot(sl.dx,sl.dy)||1;
+      const ux=sl.dx/m, uy=sl.dy/m, R=(gb.x1-gb.x0+gb.y1-gb.y0)/2;
+      const hi=proj(gcx-ux*R*1.25, gcy-uy*R*1.25, surfaceHeightVis(gcx-ux*R,gcy-uy*R));
+      const lo=proj(gcx+ux*R*1.25, gcy+uy*R*1.25, surfaceHeightVis(gcx+ux*R,gcy+uy*R));
+      if(hi&&lo){
+        const grad=ctx.createLinearGradient(hi.x,hi.y,lo.x,lo.y);
+        grad.addColorStop(0.00,'rgba(220,255,255,.45)');
+        grad.addColorStop(0.28,'rgba(120,240,255,.18)');
+        grad.addColorStop(0.55,'rgba(120,90,255,.10)');
+        grad.addColorStop(0.80,'rgba(190,40,170,.28)');
+        grad.addColorStop(1.00,'rgba(80,10,70,.42)');
+        ctx.fillStyle=grad; ctx.fillRect(0,0,W,H);
+      }
+      const cr=proj(gcx-ux*R*0.35, gcy-uy*R*0.35, surfaceHeightVis(gcx-ux*R*0.35,gcy-uy*R*0.35));
+      if(cr){
+        const rg=ctx.createRadialGradient(cr.x,cr.y,2,cr.x,cr.y,R*1.7);
+        rg.addColorStop(0,'rgba(255,255,255,.22)'); rg.addColorStop(0.5,'rgba(220,255,255,.06)'); rg.addColorStop(1,'rgba(220,255,255,0)');
+        ctx.fillStyle=rg; ctx.fillRect(0,0,W,H);
+      }
+      ctx.restore();
+    }
   } else if(isGalaxy()){
-    fillGroundH(POLY.fringe, '#1f8a64', surfaceHeightVis);
-    fillGroundH(POLY.green, '#2bbd86', surfaceHeightVis);
-    /* smooth slope shading over the tilted cosmic green */
     if(pathGroundH(POLY.green, surfaceHeightVis)){
       ctx.save(); ctx.clip();
       const gb=greenBBox(0), gcx=(gb.x0+gb.x1)/2, gcy=(gb.y0+gb.y1)/2;
@@ -6671,7 +7006,7 @@ function draw(now){
   }
   POLY.bunkers.forEach((b,bi)=>{
     const blackSand = THEME()==='volcano';
-    const galaxySand = isGalaxy();                     /* shimmering cosmic powder */
+    const galaxySand = isGalaxy() || isTwister();      /* shimmering cosmic/neon powder */
     const graySand = THEME()==='maple';                /* light-gray alpine sand */
     const bk=BUNKERS[bi];
     /* bunkers ride the surface: a greenside bunker sits on the tilted green, not flat under it */
@@ -6710,7 +7045,7 @@ function draw(now){
     if(s && s.z<600){ ctx.fillStyle='rgba(180,140,70,.5)';
       const r=Math.max(0.6,cam.foc*1.4/s.z); ctx.fillRect(s.x,s.y,r,r); }
   });
-  fillGround(POLY.tee, isGalaxy() ? '#1f9a70' : THEME()==='volcano' ? '#56582c' : '#6fb763');
+  fillGround(POLY.tee, isTwister() ? '#ff4fa3' : isGalaxy() ? '#1f9a70' : THEME()==='volcano' ? '#56582c' : '#6fb763');
   fillGround(POLY.tee.map(p=>({x:TEE.x+(p.x-TEE.x)*0.86, y:TEE.y+(p.y-TEE.y)*0.8})), 'rgba(255,255,255,.06)');
   /* black tee markers on both sides: a gate square to the playing line */
   const sp1 = (CUR.spine && CUR.spine.length>1) ? CUR.spine[1] : PIN;
@@ -6944,7 +7279,7 @@ function draw(now){
       const totYd = Math.round(dist(ball.x,ball.y,P.rest.x,P.rest.y)*YD_PER_PX);
       const sw = Math.abs(pullShape)>1 ? (pullShape>0?'SLICE':'HOOK') :
                  shape<-0.2 ? 'DRAW' : shape>0.2 ? 'FADE' : 'STRAIGHT';
-      const txt = P.water ? (THEME()==='volcano' ? 'LAVA' : isGalaxy() ? 'VOID' : 'WATER') :
+      const txt = P.water ? (THEME()==='volcano' ? 'LAVA' : (isGalaxy()||isTwister()) ? 'VOID' : 'WATER') :
         (CLUBS[clubIdx].loft>0 ? `${sw} · ${totYd} YDS` : `${totYd} YDS`);
       ctx.font='bold 13px Trebuchet MS, sans-serif';
       ctx.textAlign='center';
@@ -7399,7 +7734,8 @@ function draw(now){
     sun.addColorStop(1,'rgba(255,244,200,0)');
     ctx.fillStyle=sun; ctx.fillRect(0,0,W,H);
     const vig = ctx.createRadialGradient(W/2, H*0.46, H*0.42, W/2, H*0.52, H*0.95);
-    if(isGalaxy()){ vig.addColorStop(0,'rgba(6,3,20,0)'); vig.addColorStop(1,'rgba(6,3,20,.42)'); }
+    if(isTwister()){ vig.addColorStop(0,'rgba(20,4,40,0)'); vig.addColorStop(1,'rgba(20,4,40,.44)'); }
+    else if(isGalaxy()){ vig.addColorStop(0,'rgba(6,3,20,0)'); vig.addColorStop(1,'rgba(6,3,20,.42)'); }
     else if(THEME()==='volcano'){ vig.addColorStop(0,'rgba(40,8,4,0)'); vig.addColorStop(1,'rgba(40,8,4,.28)'); }
     else { vig.addColorStop(0,'rgba(10,30,16,0)'); vig.addColorStop(1,'rgba(10,30,16,.17)'); }
     ctx.fillStyle=vig; ctx.fillRect(0,0,W,H);
@@ -8541,24 +8877,30 @@ function waterReset(){
     return;
   }
   const lava = THEME()==='volcano';
-  const voidFall = isGalaxy();
+  const voidFall = isGalaxy() || isTwister();
   SFX.splash();
   if(lava){
     burst(ball.x,ball.y,0,'#ff7a1a',26,130,0.8,180);
     burst(ball.x,ball.y,0,'#ffd24a',14,90,0.5,130);
     burst(ball.x,ball.y,0,'#3a1208',16,70,0.6,90);     /* charred debris */
   } else if(voidFall){
-    burst(ball.x,ball.y,0,'#5cffb0',22,120,0.7,170);    /* emerald sparkle */
-    burst(ball.x,ball.y,0,'#b58aff',16,90,0.6,130);     /* violet stardust */
-    burst(ball.x,ball.y,0,'#ffffff',10,70,0.5,110);
+    if(isTwister()){
+      burst(ball.x,ball.y,0,'#ff5bb0',22,120,0.7,170);    /* rainbow sparkle */
+      burst(ball.x,ball.y,0,'#5bd4ff',16,90,0.6,130);
+      burst(ball.x,ball.y,0,'#ffe23b',12,80,0.5,120);
+    } else {
+      burst(ball.x,ball.y,0,'#5cffb0',22,120,0.7,170);    /* emerald sparkle */
+      burst(ball.x,ball.y,0,'#b58aff',16,90,0.6,130);     /* violet stardust */
+      burst(ball.x,ball.y,0,'#ffffff',10,70,0.5,110);
+    }
   } else {
     burst(ball.x,ball.y,0,'#54bdf0',24,120,0.7,170);
     burst(ball.x,ball.y,0,'#ffffff',12,80,0.5,120);
   }
   strokes++;
   streak=0; ball.gold=false;
-  showBanner(lava ? 'IN THE LAVA! +1' : voidFall ? 'LOST IN SPACE! +1' : 'SPLASH! +1',
-             lava ? '#ff7a1a' : voidFall ? '#7cffc4' : '#54bdf0');
+  showBanner(lava ? 'IN THE LAVA! +1' : isTwister() ? 'OFF THE TRACK! +1' : voidFall ? 'LOST IN SPACE! +1' : 'SPLASH! +1',
+             lava ? '#ff7a1a' : isTwister() ? '#ff6ad5' : voidFall ? '#7cffc4' : '#54bdf0');
   ball.x=lastSafe.x; ball.y=lastSafe.y; ball.z=0;
   ball.vx=ball.vy=ball.vz=0; ball.air=false; ball.moving=false;
   ball.rimming=false; ball.grazed=false;
@@ -8613,7 +8955,7 @@ function genDecor(hi){
   /* explicit per-hole fairway boulders (Maple Falls): dark grey rocks sitting in play */
   if(CUR.boulders) for(const b of CUR.boulders){
     DECOR.push({kind:'boulder', x:b.x, y:b.y, r:b.r||11, seed:Math.floor((b.x*7+b.y*13))%9999,
-                tone: isGalaxy() ? 0.16+((b.x%5)/5)*0.05 : 0.34+((b.x%5)/5)*0.12});   /* galaxy: near-black */
+                tone: (isGalaxy()||isTwister()) ? 0.16+((b.x%5)/5)*0.05 : 0.34+((b.x%5)/5)*0.12});   /* void: near-black */
   }
   const clearOf = (x,y,d)=> surfaceAt(x,y)==='rough' && dist(x,y,PIN.x,PIN.y)>d && dist(x,y,TEE.x,TEE.y)>50;
   /* rocks */
@@ -9484,6 +9826,8 @@ window.addEventListener('keydown', e=>{
   /* never let game shortcuts fire while the player is typing in a text field (e.g. the MATRIX
      cheat box or the leaderboard name box) — otherwise keys like 'm' would close the panel */
   { const t=e.target; if(t && (t.tagName==='INPUT' || t.tagName==='TEXTAREA' || t.isContentEditable)) return; }
+  /* fullscreen toggle works EVERYWHERE — menu, course select, or mid-game — so it's always one key away */
+  if(e.key==='f' || e.key==='F'){ toggleFullscreen(); return; }
   if(typeof inMenu!=='undefined' && inMenu) return;
   if(['ArrowLeft','ArrowRight','ArrowUp','ArrowDown',' '].includes(e.key)) e.preventDefault();
   if(e.repeat){ keys[e.key]=true; return; }
@@ -9494,7 +9838,6 @@ window.addEventListener('keydown', e=>{
     const map={'1':0,'2':1,'3':2,'4':4};   /* driver, iron, wedge, 60° wedge */
     setRangeClub(map[e.key]);
   }
-  if(e.key==='f' || e.key==='F') toggleFullscreen();
   if(e.key==='s' || e.key==='S'){ showArrows=!showArrows; if(state===ST.AIM) setHint(showArrows?'Slope arrows ON':'Slope arrows OFF'); }
   if(e.key==='c' || e.key==='C'){ greenBook=!greenBook; if(state===ST.AIM) setHint(greenBook?'Green book ON':'Green book OFF'); }
   if((e.key==='p' || e.key==='P') && state===ST.AIM) startReplay();
@@ -10023,6 +10366,7 @@ function showCourses(){
   { const e=$m('course6Best'); if(e) e.textContent = 'Best: ' + fmtBest(b[5]); }
   { const e=$m('course7Best'); if(e) e.textContent = 'Best: ' + fmtBest(b[6]); }
   { const e=$m('course9Best'); if(e) e.textContent = 'Best: ' + fmtBest(b[8]); }
+  { const e=$m('course10Best'); if(e) e.textContent = 'Best: ' + fmtBest(b[9]); }
   { const cv=$m('coinVal'); if(cv) cv.textContent = stats.coins||0; }
 
   /* tour heading */
@@ -11215,6 +11559,7 @@ $m('course3Play').onclick = ()=>enterGame(2);
 { const e=$m('course6Play'); if(e) e.onclick = ()=>enterGame(5); }
 { const e=$m('course7Play'); if(e) e.onclick = ()=>enterGame(6); }
 { const e=$m('course9Play'); if(e) e.onclick = ()=>enterGame(8); }   /* Galaxy Falls = COURSES[8] */
+{ const e=$m('course10Play'); if(e) e.onclick = ()=>enterGame(9); }  /* Twister = COURSES[9] */
 $m('backBtn').onclick = showTours;
 { const tb=$m('csTopBack'); if(tb) tb.onclick = ()=>{ ac(); showTours(); }; }
 { const tb=$m('tourBackBtn'); if(tb) tb.onclick = showMenu; }
@@ -11448,7 +11793,7 @@ function lbRenderList(){
     ? (((b.holes||0)-(a.holes||0)) || (b.birdies-a.birdies))
     : (((a.bestRound||999)-(b.bestRound||999)) || (b.birdies-a.birdies)) );
   const myNm = (lbName()||'').toLowerCase();
-  list.innerHTML = sorted.slice(0,50).map((e,i)=>{
+  list.innerHTML = sorted.slice(0,500).map((e,i)=>{
     const me = (e.name||'').toLowerCase()===myNm ? ' me' : '';
     const val = lbSort==='birdies'
       ? `${(e.birdies||0).toLocaleString()}<small>birdies</small>`
@@ -11463,11 +11808,21 @@ async function openLeaderboard(){
   $m('lbScreen').style.display='flex';
   $m('lbNameInput').value = (stats.lbName || window._savedName || '');
   lbData = null; lbRenderList(); lbRenderMine();
-  // push any new birdies first so my own count is reflected, then fetch the board
-  await lbSubmit(null);
+  /* register on the board so the player ALWAYS shows up globally — even with 0 birdies/holes —
+     as long as they've set a name. Without a name we just view the board (can't post). */
+  const hasName = !!(stats.lbName || window._savedName);
+  await lbSubmit(null, hasName);
   const board = await lbFetch();
   lbData = board || [];
   lbRenderList(); lbRenderMine();
+  /* nudge first-timers to set a name so they join the board */
+  if(!hasName){
+    const st=$m('lbStatus');
+    if(st && (!lbData || !lbData.length || true)){
+      /* keep the list, but hint at the top via the name row placeholder */
+      const inp=$m('lbNameInput'); if(inp) inp.placeholder='Enter a name to join the board';
+    }
+  }
 }
 $m('leaderboardBtn') && ($m('leaderboardBtn').onclick = openLeaderboard);
 $m('lbClose') && ($m('lbClose').onclick = ()=>{ $m('lbScreen').style.display='none'; });
@@ -11495,8 +11850,8 @@ $m('qualitySel').onchange = e=>{ SET.quality = e.target.value; AUTOQ.user = true
 { const q=$m('qualitySel'); if(q) q.value = SET.quality; }
 { const ni=$m('lobNameInput'); if(ni && window._savedName){ ni.value = window._savedName; } }
 $m('resetBtn').onclick = ()=>{
-  stats.bestRound=null; stats.bestStreak=0; stats.bests=[null,null,null,null,null,null,null,null,null];
-  stats.holesDone=[0,0,0,0,0,0,0,0,0]; stats.rounds=[0,0,0,0,0,0,0,0,0]; stats.totalStrokes=0; stats.totalHoles=0; stats.bestBirdieStreak=0; stats.challenges={};
+  stats.bestRound=null; stats.bestStreak=0; stats.bests=[null,null,null,null,null,null,null,null,null,null];
+  stats.holesDone=[0,0,0,0,0,0,0,0,0,0]; stats.rounds=[0,0,0,0,0,0,0,0,0,0]; stats.totalStrokes=0; stats.totalHoles=0; stats.bestBirdieStreak=0; stats.challenges={};
   stats.coins=1000; stats.ownedSkins=['white']; stats.equippedSkin='white';   /* back to a fresh 1000-coin start */
   stats.matrix=false; TESTING=false; if(typeof refreshMatrixBtn==='function') refreshMatrixBtn();   /* reset turns MATRIX off */
   try{ localStorage.removeItem(SAVE_KEY); }catch(e){}
