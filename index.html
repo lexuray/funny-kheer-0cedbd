@@ -3,6 +3,28 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<!-- ============================ GOOGLE ANALYTICS (GA4) ============================
+     HOW TO TURN THIS ON:
+       1. Go to analytics.google.com, create a property + a "Web" data stream for your
+          site's URL. Google gives you a Measurement ID that looks like G-XXXXXXXXXX.
+       2. Replace BOTH copies of G-XXXXXXXXXX below with your real ID, then re-upload.
+          (It appears twice: once in the script src, once in the gtag config line.)
+     That's it. Players, countries, devices, live users, and how long they play will start
+     showing in the GA4 "Reports" → "Realtime" panel within a minute of someone visiting.
+     If you leave the placeholder as-is, analytics simply stays off — the game is unaffected. -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-TB0W3KGF9V"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-TB0W3KGF9V');
+  /* tiny helper so the rest of the game can log custom events safely whether or not GA is set
+     up yet. Usage anywhere in the game: track('hole_complete', {course:'Twister', hole:9}); */
+  window.track = function(name, params){ try{ if(typeof gtag==='function') gtag('event', name, params||{}); }catch(e){} };
+</script>
+<!-- ========================== END GOOGLE ANALYTICS ============================ -->
+
 <title>Birdie Blitz — 9-Hole Gauntlet</title>
 <style>
   :root{ --cream:#fff7e0; --ink:#1d3a22; --sun:#ffd84d; --chip:#ffffff; }
@@ -9426,6 +9448,13 @@ function holed(){
     }
     const last = holeIdx === CH().length-1;
     if(qualified) roundDiffs[holeIdx] = diff;
+    /* analytics: log each hole result, and a round_complete when the 9th is cleared. Only the
+       course name, hole number, strokes and score-to-par are sent — nothing personal. */
+    if(window.track && !rangeMode){
+      const cName = (COURSES[courseIdx]&&COURSES[courseIdx].name)||('course_'+courseIdx);
+      track('hole_complete', { course:cName, hole:holeIdx+1, strokes:strokes, to_par:diff });
+      if(last && qualified) track('round_complete', { course:cName, holes:9 });
+    }
     /* snapshot which courses were unlocked AND which tours were complete BEFORE recording
        this hole, so on a course completion we can detect a newly-unlocked card AND whether
        this finishes an entire tour (which earns a celebration screen). */
@@ -10594,6 +10623,8 @@ function enterGame(ci){
   sizeCanvas();                       /* lock crisp resolution now the canvas is visible/sized */
   ac(); startMusic();
   roundDiffs=[]; roundHoleDiffs=[]; birdieStreak=0;
+  /* analytics: which course was started (no personal data, just the course name) */
+  if(window.track) track('course_start', { course: (COURSES[ci]&&COURSES[ci].name)||('course_'+ci) });
   startHole(0);
 }
 /* ============================================================================
