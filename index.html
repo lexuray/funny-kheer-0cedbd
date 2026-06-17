@@ -2105,7 +2105,10 @@ const ctx = cv.getContext('2d');
 const W = 960, H = 600;
 function sizeCanvas(){
   const fs = !!document.fullscreenElement;
-  const dpr = Math.min(window.devicePixelRatio || 1, fs ? 1.5 : 1.4);   /* cap DPR low for speed */
+  /* DPR drives how many physical pixels we rasterize each frame (cost scales with DPR²). The
+     world is a fixed 960×600 that we upscale, so a slightly lower cap is visually almost
+     identical but markedly cheaper on high-density phone screens. */
+  const dpr = Math.min(window.devicePixelRatio || 1, fs ? 1.4 : 1.3);
   const rect = cv.getBoundingClientRect();
   const cssW = rect.width  || W;
   const cssH = rect.height || cssW * (H/W);                  /* use real rendered height */
@@ -2116,7 +2119,8 @@ function sizeCanvas(){
   /* map logical 960x600 → full backing store; crisp + correct regardless of pixel count */
   ctx.setTransform(bw/W, 0, 0, bh/H, 0, 0);
   ctx.imageSmoothingEnabled = true;
-  ctx.imageSmoothingQuality = 'high';
+  /* 'high' smoothing is costly per draw and the gain is invisible at this upscale ratio */
+  ctx.imageSmoothingQuality = 'low';
 }
 sizeCanvas();
 window.addEventListener('resize', sizeCanvas);
@@ -3999,7 +4003,10 @@ function loadHole(i){
   /* elevation shading cells + height range */
   SHADE_CELLS = [];
   let hmin=1e9, hmax=-1e9;
-  const cs = 12;
+  /* cell size drives how many shaded quads the green costs each frame. The shading is a smooth
+     gradient, so a coarser grid on lower-power devices looks nearly identical but renders far
+     fewer fills. This is rebuilt per hole, and auto-quality picks the size. */
+  const cs = SET.quality==='high' ? 12 : 18;
   for(let y=bb.y0; y<bb.y1; y+=cs) for(let x=bb.x0; x<bb.x1; x+=cs){
     const corners=[[x,y],[x+cs,y],[x+cs,y+cs],[x,y+cs]];
     if(corners.every(([cx2,cy2])=>greenSDF(cx2,cy2)>1)){
@@ -4064,7 +4071,37 @@ function loadHole(i){
   });
 }
 
-/* ============================ STATE ============================ */
+/* Rebuild ONLY the green-shade grid + contour lines for the current hole. Called when
+   auto-quality flips mid-round so the coarser/finer grid takes effect immediately, without
+   disturbing ball state or the rest of the hole. Safe to call any time a hole is loaded. */
+function rebuildTerrainDetail(){
+  if(typeof GREEN==='undefined' || !GREEN || typeof greenSDF!=='function') return;
+  const bb = greenBBox(26);
+  SHADE_CELLS = [];
+  let hmin=1e9, hmax=-1e9;
+  const cs = SET.quality==='high' ? 12 : 18;
+  for(let y=bb.y0; y<bb.y1; y+=cs) for(let x=bb.x0; x<bb.x1; x+=cs){
+    const corners=[[x,y],[x+cs,y],[x+cs,y+cs],[x,y+cs]];
+    if(corners.every(([cx2,cy2])=>greenSDF(cx2,cy2)>1)){
+      const h = greenHeight(x+cs/2, y+cs/2);
+      hmin=Math.min(hmin,h); hmax=Math.max(hmax,h);
+      const g = greenGrad(x+cs/2, y+cs/2);
+      const lam = Math.max(-1, Math.min(1, (g.x*0.55 + g.y*0.85)*1.6));
+      SHADE_CELLS.push({pts:corners.map(([cx2,cy2])=>({x:cx2,y:cy2})), h, lam});
+    }
+  }
+  const span = Math.max(0.001, hmax-hmin);
+  SHADE_CELLS.forEach(c=>c.t=(c.h-hmin)/span);
+  CONTOUR_SEGS = [];
+  const levels = 8;
+  for(let k=1;k<levels;k++){
+    const iso = hmin + span*k/levels;
+    marchSegs(greenHeight, bb.x0,bb.y0,bb.x1,bb.y1, 9, iso).forEach(s=>{
+      const mx=(s[0].x+s[1].x)/2, my=(s[0].y+s[1].y)/2;
+      if(greenSDF(mx,my)>3) CONTOUR_SEGS.push(s);
+    });
+  }
+}
 const ST = {AIM:0, PULL:1, MOVING:4, HOLED:5, FLY:6, REPLAY:7};
 let state, strokes, aimAngle, clubIdx, wind, windShiftAt, spin, shape;
 let holeIdx = 0, roundDiffs = [], birdieStreak = 0;
@@ -4171,13 +4208,19 @@ async function lbSubmit(bestRound, force){
     return data.board || null;
   }catch(e){ return null; }                               // server asleep/offline — try again later
 }
-async function lbFetch(){
+/* fetch the board with a timeout. Render's free tier sleeps after ~15min idle and takes
+   ~30-50s to cold-start, so the first call after sleep can be slow — we allow a long timeout
+   and the caller retries. */
+async function lbFetch(timeoutMs){
+  const ctrl = (typeof AbortController!=='undefined') ? new AbortController() : null;
+  const timer = ctrl ? setTimeout(()=>ctrl.abort(), timeoutMs||12000) : null;
   try{
-    const res = await fetch(LB_BASE + '/leaderboard', { method:'GET' });
+    const res = await fetch(LB_BASE + '/leaderboard', { method:'GET', signal: ctrl?ctrl.signal:undefined });
+    if(timer) clearTimeout(timer);
     if(!res.ok) return null;
     const data = await res.json();
     return data.board || [];
-  }catch(e){ return null; }
+  }catch(e){ if(timer) clearTimeout(timer); return null; }
 }
 const CHALLENGES = [
   {id:'dunk5',     name:'Splashdown',      desc:'Dunk hole 5 on Sakura straight from the air', icon:'🎯', coins:800},
@@ -5456,7 +5499,7 @@ function updateCtlUI(){
     const t=Math.max(0, Math.min(1, (clientY-r.top)/r.height));
     spin = Math.max(-1, Math.min(1, 1 - t*2));
     updateCtlUI();
-    if(state===ST.AIM) refreshPrediction();
+    if(state===ST.AIM) refreshPrediction(true);
   }
   dock.addEventListener('pointerdown', e=>{
     if(!(state===ST.AIM || state===ST.PULL)) return;
@@ -8835,7 +8878,7 @@ function setRangeClub(ci){
   updateCtlUI();
   /* refresh selected highlight */
   document.querySelectorAll('#rangeClubs .rcBtn').forEach(b=>b.classList.toggle('sel', +b.dataset.ci===ci));
-  refreshPrediction();
+  refreshPrediction(true);
 }
 function buildRangeClubs(){
   const wrap = document.getElementById('rangeClubs'); if(!wrap) return;
@@ -8864,7 +8907,7 @@ function resetToMat(){
   resetPuttPressure();
   if(!manualClub) applyAutoClub();   /* keep the player's chosen club between range shots */
   hideMeters();
-  refreshPrediction();
+  refreshPrediction(true);
   updateHUD();
 }
 function waterReset(){
@@ -8943,7 +8986,7 @@ function nextShotSetup(){
     (inSand ? 'Splash out! ▲ backspin to check · ▼ topspin to roll out' :
      onG ? 'Pick a line ◀ ▶ · pull back to see the read' :
      'Aim ◀ ▶ · drag back to swing'));
-  refreshPrediction();
+  refreshPrediction(true);
   updateHUD();
 }
 let DECOR = [];
@@ -9111,7 +9154,7 @@ function startHole(i, skipFly){
     cam.x = TEE.x - Math.cos(cam.yaw)*150;
     cam.y = TEE.y - Math.sin(cam.yaw)*150;
     setHint(rangeMode ? 'Pick a club below · aim ◀ ▶ · drag back to swing' : 'Aim ◀ ▶ · drag back to swing');
-    refreshPrediction();
+    refreshPrediction(true);
   } else {
     /* hole preview flyover */
     state = ST.FLY;
@@ -9140,7 +9183,7 @@ function endFlyover(){
   state = ST.AIM;
   cam.yaw = aimAngle;
   setHint(clubIdx<=2 ? 'Aim ◀ ▶ · drag back to swing' : 'Aim ◀ ▶ · drag back to swing');
-  refreshPrediction();
+  refreshPrediction(true);
 }
 function startReplay(){
   if(!replayAvail || shotRec.length<2) return;
@@ -9485,7 +9528,15 @@ function showBanner(text,color){
   clearTimeout(bannerTimer);
   bannerTimer=setTimeout(()=>b.classList.remove('show'), 1100);
 }
-function refreshPrediction(){
+let _lastPredT = 0;
+function refreshPrediction(force){
+  /* predictShot runs a full physics simulation; recomputing it 60x/sec is a real CPU cost.
+     The predicted line doesn't need per-frame updates to look smooth, so cap it to ~25/sec
+     (force=true bypasses the cap for the moments that must be exact, e.g. the instant a club
+     or shot state changes). */
+  const t = (typeof performance!=='undefined') ? performance.now() : Date.now();
+  if(!force && (t - _lastPredT) < 40) return;
+  _lastPredT = t;
   if(state===ST.AIM) prediction = predictShot(clubIdx===3 ? 62 : 78);
   else if(state===ST.PULL) prediction = predictShot(Math.max(clubIdx===3 ? pullPower : powerCurve(pullPower), 8));
 }
@@ -9503,9 +9554,13 @@ function frame(now){
     AUTOQ.t += dt;
     if(AUTOQ.t > 1.4){
       AUTOQ.t = 0;
+      const prevQ = SET.quality;
       if(AUTOQ.avg < 40 && SET.quality==='high'){ SET.quality='low'; }
       else if(AUTOQ.avg > 54 && SET.quality==='low' && ++AUTOQ.good >= 3){ SET.quality='high'; AUTOQ.good=0; }
       else if(AUTOQ.avg <= 54) AUTOQ.good=0;
+      /* if quality flipped, rebuild the per-hole terrain detail so the new (coarser/finer)
+         green-shade grid takes effect right away instead of only on the next hole */
+      if(SET.quality!==prevQ && typeof rebuildTerrainDetail==='function') rebuildTerrainDetail();
     }
   }
   pollGamepad(dt);                              /* Xbox / gamepad input */
@@ -10593,7 +10648,7 @@ function mpLoadPlayer(idx){
   if(typeof resetPuttPressure==='function') resetPuttPressure();
   applyAutoClub();
   if(typeof hideMeters==='function') hideMeters();
-  refreshPrediction();
+  refreshPrediction(true);
   mpShowTurn();
   mpRenderBoard();
 
@@ -11807,21 +11862,42 @@ function lbRenderList(){
 async function openLeaderboard(){
   $m('lbScreen').style.display='flex';
   $m('lbNameInput').value = (stats.lbName || window._savedName || '');
-  lbData = null; lbRenderList(); lbRenderMine();
-  /* register on the board so the player ALWAYS shows up globally — even with 0 birdies/holes —
-     as long as they've set a name. Without a name we just view the board (can't post). */
   const hasName = !!(stats.lbName || window._savedName);
-  await lbSubmit(null, hasName);
-  const board = await lbFetch();
-  lbData = board || [];
-  lbRenderList(); lbRenderMine();
-  /* nudge first-timers to set a name so they join the board */
-  if(!hasName){
-    const st=$m('lbStatus');
-    if(st && (!lbData || !lbData.length || true)){
-      /* keep the list, but hint at the top via the name row placeholder */
-      const inp=$m('lbNameInput'); if(inp) inp.placeholder='Enter a name to join the board';
-    }
+  if(!hasName){ const inp=$m('lbNameInput'); if(inp) inp.placeholder='Enter a name to join the board'; }
+
+  /* show the last board we cached locally right away, so the player never stares at a blank
+     screen while the server wakes up */
+  let cached=null;
+  try{ const c=localStorage.getItem('bbLbCache'); if(c) cached=JSON.parse(c); }catch(e){}
+  if(cached && cached.length){ lbData=cached; lbRenderList(); lbRenderMine(); }
+  else { lbData=null; lbRenderList(); lbRenderMine(); }
+
+  const st=$m('lbStatus');
+  const setStatus=(t)=>{ if(st){ st.style.display='block'; st.textContent=t; } };
+
+  /* register the player (best-effort) so they appear, then fetch with cold-start retries.
+     The first request after the server has been idle can take 30-50s, so we retry a few
+     times with a friendly "waking up" message rather than showing an empty board. */
+  if(hasName){ try{ await lbSubmit(null, true); }catch(e){} }
+
+  let board=null;
+  for(let attempt=0; attempt<4 && (board===null); attempt++){
+    if(attempt===0) setStatus(cached&&cached.length ? 'Refreshing the global board…' : 'Loading the global board…');
+    else setStatus('Waking up the leaderboard server… (this can take ~30s on first open)');
+    board = await lbFetch(attempt===0 ? 12000 : 22000);
+    if(board===null && attempt<3) await new Promise(r=>setTimeout(r, 1500));
+  }
+
+  if(board!==null){
+    lbData = board;
+    try{ localStorage.setItem('bbLbCache', JSON.stringify(board.slice(0,200))); }catch(e){}
+    lbRenderList(); lbRenderMine();
+  } else {
+    /* server unreachable/asleep: keep showing the cache (if any) and explain */
+    if(cached && cached.length){ lbData=cached; lbRenderList(); lbRenderMine();
+      setStatus('Showing the last saved board — could not reach the server just now. Pull up again in a moment.'); }
+    else { lbData=[]; lbRenderList(); lbRenderMine();
+      setStatus('Could not reach the leaderboard server. It may be waking up — try again in ~30s.'); }
   }
 }
 $m('leaderboardBtn') && ($m('leaderboardBtn').onclick = openLeaderboard);
