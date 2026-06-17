@@ -1734,7 +1734,7 @@
           <ellipse cx="58" cy="95" rx="3" ry="3.4" fill="#2a2348"/>
         </svg>
         <div class="courseName">Galaxy Falls</div>
-        <div class="courseInfo">9 holes · Par 35</div>
+        <div class="courseInfo">9 holes · Par 33</div>
         <div class="cpDiff"><span>DIFFICULTY</span>
           <span class="cpDiffDots"><i class="on hard"></i><i class="on hard"></i><i class="on hard"></i><i class="on hard"></i><i class="on hard"></i></span>
           <span class="cpDiffLabel">Cosmic</span></div>
@@ -2018,11 +2018,13 @@
       </div>
       <div id="lbMine">
         <div class="lbMineStat"><small>YOUR BIRDIES</small><b id="lbMyBirdies">0</b></div>
+        <div class="lbMineStat"><small>HOLES PLAYED</small><b id="lbMyHoles">0</b></div>
         <div class="lbMineStat"><small>BEST ROUND</small><b id="lbMyBest">—</b></div>
         <div class="lbMineStat"><small>GLOBAL RANK</small><b id="lbMyRank">—</b></div>
       </div>
       <div id="lbTabs">
         <button data-sort="birdies" class="on">MOST BIRDIES</button>
+        <button data-sort="holes">MOST HOLES</button>
         <button data-sort="bestRound">BEST ROUND</button>
       </div>
       <div id="lbList"></div>
@@ -3398,84 +3400,85 @@ const HOLES7 = [
 const HOLES8 = [
  /* 1 — Stardrift · P4 · a wide, downhill opener bending gently right; the fairway tilts hard
         right toward the void, a galaxy bunker on the right edge catches loose drives. Huge green. */
- {name:'Stardrift', par:4, windMax:0, tee:{x:210,y:480}, fw:84, pin:{x:780,y:280}, windDir:0,
-  fwSlope:{dx:0.5,dy:-0.35,s:0.6},
-  slopeZones:[{x:560,y:380,r:120,dx:0.7,dy:-0.4,s:0.7}],
-  green:{lobes:[{x:790,y:262,r:82},{x:720,y:300,r:60},{x:864,y:300,r:58},{x:790,y:188,r:56}],
-         slope:{dx:0.5,dy:0.1,s:0.34}, flat:{r:40,f:0.46},
-         features:[{type:'bowl',x:790,y:262,r:46,h:9},{type:'tier',x:790,y:222,dx:0,dy:-1,h:11,w:26},
-                   {type:'bowl',x:850,y:296,r:24,h:-6}]},
-  spine:[{x:210,y:480},{x:430,y:452},{x:600,y:360},{x:790,y:262}],
+ {name:'Stardrift', par:4, windMax:0, tee:{x:170,y:140}, fw:84, pin:{x:470,y:460}, windDir:0,
+  fwSlope:{dx:0.2,dy:0.6,s:0.62},
+  slopeZones:[{x:540,y:260,r:120,dx:0.7,dy:0.3,s:0.7},{x:560,y:400,r:130,dx:-0.6,dy:0.4,s:0.75}],
+  green:{lobes:[{x:470,y:460,r:82},{x:410,y:420,r:60},{x:534,y:422,r:58},{x:470,y:518,r:52}],
+         slope:{dx:0.1,dy:-0.5,s:0.34}, flat:{r:40,f:0.46},
+         features:[{type:'bowl',x:470,y:460,r:46,h:9},{type:'tier',x:470,y:422,dx:0,dy:-1,h:11,w:26},
+                   {type:'bowl',x:528,y:418,r:24,h:-6}]},
+  spine:[{x:170,y:140},{x:430,y:210},{x:620,y:320},{x:560,y:420},{x:470,y:460}],
   waters:[],
-  bunkers:[{x:600,y:430,rx:40,ry:24,rot:0.4},{x:858,y:312,rx:24,ry:16,rot:-0.2}],
+  bunkers:[{x:600,y:360,rx:40,ry:24,rot:0.4},{x:528,y:466,rx:24,ry:16,rot:-0.2}],
   trees:[],
-  boulders:[{x:470,y:392,r:18}]},
+  boulders:[{x:560,y:290,r:18}]},
 
- /* 2 — Nebula Carry · P3 · all-carry across the void to a giant green sloping right; miss is
-        space. A galaxy bunker guards short-left as the bail. */
- {name:'Nebula Carry', par:3, windMax:0, tee:{x:280,y:300}, fw:78, pin:{x:680,y:300}, windDir:0,
-  green:{lobes:[{x:660,y:300,r:80},{x:610,y:256,r:58},{x:610,y:344,r:58},{x:716,y:300,r:56}],
-         slope:{dx:0.75,dy:0.05,s:0.4}, flat:{r:38,f:0.42},
-         features:[{type:'bowl',x:656,y:300,r:48,h:10},{type:'ridge',x:660,y:300,dx:0,dy:1,h:9,w:26}]},
-  spine:[{x:280,y:300},{x:470,y:300},{x:660,y:300}],
+ /* 2 — Nebula Carry · P3 · a steep downhill drop-shot from a high tee across a wedge of void
+        to a giant green set on the diagonal; the green spills toward the back-right edge so a
+        long miss is gone. A galaxy bunker guards the short approach. */
+ {name:'Nebula Carry', par:3, windMax:0, tee:{x:230,y:160}, fw:74, pin:{x:660,y:420}, windDir:0,
+  green:{lobes:[{x:660,y:420,r:82},{x:606,y:374,r:58},{x:714,y:466,r:58},{x:660,y:500,r:52}],
+         slope:{dx:0.35,dy:0.45,s:0.4}, flat:{r:38,f:0.42},
+         features:[{type:'bowl',x:656,y:420,r:48,h:10},{type:'tier',x:620,y:386,dx:-0.7,dy:-0.7,h:9,w:24}]},
+  spine:[{x:230,y:160},{x:440,y:290},{x:660,y:420}],
   waters:[],
-  bunkers:[{x:596,y:360,rx:30,ry:19,rot:-0.3}],
+  bunkers:[{x:600,y:486,rx:30,ry:19,rot:0.3}],
   trees:[],
-  boulders:[]},
+  boulders:[{x:520,y:330,r:16}]},
 
  /* 3 — Black Hole Bend · P4 · steep dogleg-LEFT around a giant black boulder cluster; the
         fairway plunges downhill and tilts left toward the void. Place the drive or fall in. */
- {name:'Black Hole Bend', par:4, windMax:0, tee:{x:170,y:300}, fw:80, pin:{x:760,y:420}, windDir:0,
-  fwSlope:{dx:-0.6,dy:0.4,s:0.62},
-  slopeZones:[{x:380,y:250,r:100,dx:-0.7,dy:-0.2,s:0.8},{x:600,y:360,r:110,dx:0.2,dy:0.6,s:0.7}],
-  green:{lobes:[{x:780,y:420,r:80},{x:730,y:380,r:58},{x:730,y:460,r:58},{x:840,y:420,r:56}],
-         slope:{dx:0.2,dy:0.55,s:0.36}, flat:{r:40,f:0.44},
-         features:[{type:'bowl',x:780,y:420,r:46,h:9},{type:'tier',x:810,y:420,dx:-1,dy:0,h:11,w:24}]},
-  spine:[{x:170,y:300},{x:360,y:250},{x:540,y:330},{x:680,y:400},{x:780,y:420}],
+ {name:'Black Hole Bend', par:4, windMax:0, tee:{x:200,y:480}, fw:80, pin:{x:520,y:160}, windDir:0,
+  fwSlope:{dx:0.4,dy:-0.5,s:0.6},
+  slopeZones:[{x:560,y:420,r:120,dx:0.6,dy:-0.3,s:0.8},{x:640,y:260,r:120,dx:-0.7,dy:-0.2,s:0.75}],
+  green:{lobes:[{x:520,y:160,r:80},{x:470,y:200,r:58},{x:578,y:200,r:56},{x:520,y:88,r:54}],
+         slope:{dx:0.3,dy:0.5,s:0.36}, flat:{r:40,f:0.44},
+         features:[{type:'bowl',x:520,y:164,r:46,h:9},{type:'tier',x:520,y:124,dx:0,dy:-1,h:11,w:24}]},
+  spine:[{x:200,y:480},{x:440,y:440},{x:660,y:360},{x:680,y:240},{x:520,y:164}],
   waters:[],
-  bunkers:[{x:470,y:300,rx:34,ry:20,rot:0.3},{x:738,y:464,rx:24,ry:16,rot:0.2}],
+  bunkers:[{x:600,y:300,rx:34,ry:20,rot:0.3},{x:472,y:204,rx:24,ry:16,rot:0.2}],
   trees:[],
-  boulders:[{x:430,y:210,r:26},{x:392,y:250,r:18}]},
+  boulders:[{x:700,y:330,r:26},{x:720,y:290,r:18}]},
 
  /* 4 — The Plunge · P4 · a dramatic downhill drop; the whole fairway runs steeply downhill so
         drives bound forward. Green is giant and tilts back-to-front toward the void short. */
- {name:'The Plunge', par:4, windMax:0, tee:{x:200,y:150}, fw:82, pin:{x:760,y:470}, windDir:0,
-  fwSlope:{dx:0.25,dy:0.7,s:0.7},
-  slopeZones:[{x:500,y:330,r:140,dx:0.2,dy:0.8,s:0.8}],
-  green:{lobes:[{x:770,y:470,r:80},{x:716,y:432,r:58},{x:824,y:432,r:56},{x:770,y:524,r:54}],
+ {name:'The Plunge', par:4, windMax:0, tee:{x:470,y:110}, fw:82, pin:{x:480,y:460}, windDir:0,
+  fwSlope:{dx:0.0,dy:0.85,s:0.78},
+  slopeZones:[{x:480,y:290,r:150,dx:0.0,dy:0.9,s:0.85}],
+  green:{lobes:[{x:480,y:460,r:80},{x:426,y:422,r:58},{x:534,y:422,r:56},{x:480,y:514,r:52}],
          slope:{dx:0.0,dy:-0.55,s:0.36}, flat:{r:40,f:0.44},
-         features:[{type:'bowl',x:770,y:470,r:46,h:9},{type:'ridge',x:770,y:470,dx:1,dy:0,h:8,w:24}]},
-  spine:[{x:200,y:150},{x:400,y:280},{x:580,y:390},{x:770,y:470}],
+         features:[{type:'bowl',x:480,y:460,r:46,h:9},{type:'ridge',x:480,y:460,dx:1,dy:0,h:8,w:24}]},
+  spine:[{x:470,y:110},{x:476,y:250},{x:480,y:370},{x:480,y:460}],
   waters:[],
-  bunkers:[{x:560,y:430,rx:38,ry:22,rot:-0.3},{x:720,y:430,rx:24,ry:16,rot:0.3}],
+  bunkers:[{x:400,y:420,rx:38,ry:22,rot:-0.3},{x:560,y:420,rx:24,ry:16,rot:0.3}],
   trees:[],
-  boulders:[{x:430,y:300,r:20}]},
+  boulders:[{x:480,y:290,r:20}]},
 
  /* 5 — Comet Tail · P3 · long downhill par 3 to a giant green perched over the void; the green
         slopes off the back, so stay below the hole. */
- {name:'Comet Tail', par:3, windMax:0, tee:{x:300,y:200}, fw:74, pin:{x:700,y:380}, windDir:0,
-  green:{lobes:[{x:700,y:380,r:82},{x:650,y:336,r:58},{x:650,y:424,r:58},{x:756,y:380,r:56}],
-         slope:{dx:0.1,dy:-0.5,s:0.4}, flat:{r:38,f:0.42},
-         features:[{type:'bowl',x:700,y:380,r:48,h:10},{type:'tier',x:700,y:346,dx:0,dy:-1,h:10,w:24}]},
-  spine:[{x:300,y:200},{x:500,y:290},{x:700,y:380}],
+ {name:'Comet Tail', par:3, windMax:0, tee:{x:160,y:300}, fw:74, pin:{x:620,y:230}, windDir:0,
+  green:{lobes:[{x:620,y:230,r:82},{x:570,y:274,r:58},{x:676,y:274,r:56},{x:620,y:156,r:54}],
+         slope:{dx:0.2,dy:0.5,s:0.4}, flat:{r:38,f:0.42},
+         features:[{type:'bowl',x:620,y:234,r:48,h:10},{type:'tier',x:620,y:196,dx:0,dy:-1,h:10,w:24}]},
+  spine:[{x:160,y:300},{x:390,y:264},{x:620,y:234}],
   waters:[],
-  bunkers:[{x:642,y:430,rx:30,ry:19,rot:0.4}],
+  bunkers:[{x:570,y:300,rx:30,ry:19,rot:0.4}],
   trees:[],
   boulders:[]},
 
  /* 6 — Event Horizon · P4 · steep dogleg-RIGHT plunging downhill; a giant black boulder sits in
         the inside corner. Wide fairway tilts hard right toward the drop. */
- {name:'Event Horizon', par:4, windMax:0, tee:{x:160,y:460}, fw:84, pin:{x:800,y:200}, windDir:0,
-  fwSlope:{dx:0.55,dy:-0.45,s:0.62},
-  slopeZones:[{x:520,y:380,r:120,dx:0.8,dy:-0.3,s:0.8},{x:680,y:280,r:100,dx:0.4,dy:-0.6,s:0.7}],
-  green:{lobes:[{x:810,y:200,r:80},{x:760,y:240,r:58},{x:864,y:240,r:56},{x:810,y:128,r:54}],
-         slope:{dx:-0.3,dy:0.5,s:0.36}, flat:{r:40,f:0.44},
-         features:[{type:'bowl',x:810,y:204,r:46,h:9},{type:'tier',x:782,y:200,dx:1,dy:0,h:11,w:24}]},
-  spine:[{x:160,y:460},{x:380,y:430},{x:560,y:340},{x:700,y:260},{x:810,y:204}],
+ {name:'Event Horizon', par:4, windMax:0, tee:{x:820,y:430}, fw:84, pin:{x:200,y:300}, windDir:0,
+  fwSlope:{dx:-0.4,dy:-0.2,s:0.55},
+  slopeZones:[{x:560,y:180,r:130,dx:-0.6,dy:0.3,s:0.8},{x:340,y:240,r:120,dx:-0.4,dy:0.5,s:0.7}],
+  green:{lobes:[{x:200,y:300,r:80},{x:250,y:260,r:58},{x:250,y:340,r:56},{x:200,y:392,r:54}],
+         slope:{dx:0.4,dy:0.1,s:0.36}, flat:{r:40,f:0.44},
+         features:[{type:'bowl',x:204,y:300,r:46,h:9},{type:'tier',x:232,y:300,dx:-1,dy:0,h:11,w:24}]},
+  spine:[{x:820,y:430},{x:660,y:280},{x:480,y:180},{x:320,y:220},{x:200,y:300}],
   waters:[],
-  bunkers:[{x:560,y:420,rx:38,ry:22,rot:0.5},{x:846,y:248,rx:24,ry:16,rot:-0.2}],
+  bunkers:[{x:480,y:230,rx:38,ry:22,rot:0.5},{x:252,y:344,rx:24,ry:16,rot:-0.2}],
   trees:[],
-  boulders:[{x:470,y:360,r:24}]},
+  boulders:[{x:600,y:240,r:24}]},
 
  /* 7 — Supernova Climb · P5 · the brutal UPHILL hole: the fairway climbs steeply, so drives that
         come up short ROLL BACK DOWN. Three big shots up the slope to a giant green at the summit. */
@@ -3506,18 +3509,18 @@ const HOLES8 = [
  /* 9 — The Reckoning · P5 · grand downhill finisher; a long, wide fairway tumbles downhill with
         a sweeping dogleg-left, a giant black boulder guarding the second-shot corner, to an
         enormous tiered green floating over the void. */
- {name:'The Reckoning', par:5, windMax:0, tee:{x:140,y:200}, fw:84, pin:{x:840,y:430}, windDir:0,
-  fwSlope:{dx:-0.35,dy:0.55,s:0.6},
-  slopeZones:[{x:400,y:300,r:140,dx:-0.5,dy:0.5,s:0.8},{x:640,y:400,r:140,dx:0.3,dy:0.5,s:0.7}],
-  green:{lobes:[{x:850,y:430,r:86},{x:792,y:388,r:62},{x:792,y:472,r:60},{x:912,y:430,r:58},{x:850,y:340,r:56}],
-         slope:{dx:-0.2,dy:-0.45,s:0.36}, flat:{r:46,f:0.46},
-         features:[{type:'bowl',x:850,y:430,r:50,h:10},{type:'tier',x:850,y:392,dx:0,dy:-1,h:12,w:28},
-                   {type:'bowl',x:902,y:430,r:24,h:-6}]},
-  spine:[{x:140,y:200},{x:360,y:300},{x:540,y:380},{x:700,y:420},{x:850,y:430}],
+ {name:'The Reckoning', par:3, windMax:0, tee:{x:840,y:150}, fw:84, pin:{x:200,y:470}, windDir:0,
+  fwSlope:{dx:0.35,dy:0.55,s:0.6},
+  slopeZones:[{x:600,y:280,r:140,dx:0.5,dy:0.5,s:0.8},{x:360,y:400,r:140,dx:-0.3,dy:0.5,s:0.7}],
+  green:{lobes:[{x:200,y:470,r:86},{x:262,y:428,r:62},{x:262,y:512,r:60},{x:140,y:470,r:58},{x:200,y:380,r:56}],
+         slope:{dx:0.2,dy:-0.45,s:0.36}, flat:{r:46,f:0.46},
+         features:[{type:'bowl',x:200,y:470,r:50,h:10},{type:'tier',x:200,y:432,dx:0,dy:-1,h:12,w:28},
+                   {type:'bowl',x:148,y:470,r:24,h:-6}]},
+  spine:[{x:840,y:150},{x:660,y:250},{x:480,y:360},{x:320,y:420},{x:200,y:470}],
   waters:[],
-  bunkers:[{x:540,y:430,rx:40,ry:24,rot:0.4},{x:792,y:474,rx:26,ry:17,rot:0.2}],
+  bunkers:[{x:480,y:430,rx:40,ry:24,rot:0.4},{x:262,y:514,rx:26,ry:17,rot:0.2}],
   trees:[],
-  boulders:[{x:660,y:400,r:28}]}
+  boulders:[{x:560,y:320,r:28}]}
 ];
 
 /* ===== GOLF TOURS: each tour groups courses. Score a birdie (or better) somewhere in a
@@ -3885,6 +3888,16 @@ function setMatrix(on){
   TESTING = !!on;
   stats.matrix = TESTING;
   try{ saveProgress(); }catch(e){}
+  /* refresh the skip-hole button so matrix's "skip any hole" applies immediately, even mid-hole */
+  try{
+    const sk=document.getElementById('skipHoleBtn');
+    if(sk && !inMenu){
+      const cleared=(stats.holesDone && stats.holesDone[courseIdx])||0;
+      const canSkip = !rangeMode && !practiceMode && !(MP&&MP.on)
+                      && (TESTING || holeIdx < cleared) && holeIdx < CH().length-1;
+      sk.style.display = canSkip ? 'inline-flex' : 'none';
+    }
+  }catch(e){}
   /* swap the soundtrack to match the mode (only if music is already running) */
   try{
     if(TESTING){ if(typeof startMatrixMusic==='function'){ stopMusic(); /* matrix music started by the sequence */ } }
@@ -3894,7 +3907,7 @@ function setMatrix(on){
 }
 let stats = {bestRound:null, bestStreak:0, bestBirdieStreak:0,
   bests:[null,null,null,null,null,null,null,null,null], holesDone:[0,0,0,0,0,0,0,0,0], rounds:[0,0,0,0,0,0,0,0,0], totalStrokes:0, totalHoles:0,
-  lifetimeBirdies:0, lbName:null, lbBirdiesSent:0,    /* global leaderboard: lifetime birdies + how many already submitted */
+  lifetimeBirdies:0, lbName:null, lbBirdiesSent:0, lbHolesSent:0,    /* global leaderboard: lifetime birdies + holes, and how many already submitted */
   challenges:{}, coins:1000, ownedSkins:['white'], equippedSkin:'white', tourBirdie:{}, matrix:false};  /* everyone starts with 1000 coins to buy a custom ball */
 
 /* ===== SAVE PROGRESS (player's own browser via localStorage) =====
@@ -3939,14 +3952,18 @@ async function lbSubmit(bestRound){
     const already = stats.lbBirdiesSent||0;
     const have = stats.lifetimeBirdies||0;
     const delta = Math.max(0, have - already);           // birdies since last submit
-    if(delta<=0 && bestRound==null) return null;          // nothing new to send
+    const holesHave = stats.totalHoles||0;               // lifetime holes played
+    const holesSent = stats.lbHolesSent||0;
+    const holesDelta = Math.max(0, holesHave - holesSent);
+    if(delta<=0 && holesDelta<=0 && bestRound==null) return null;   // nothing new to send
     const res = await fetch(LB_BASE + '/leaderboard', {
       method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ name: lbName(), birdies: delta, bestRound: bestRound ?? null })
+      body: JSON.stringify({ name: lbName(), birdies: delta, holes: holesDelta, bestRound: bestRound ?? null })
     });
     if(!res.ok) return null;
     const data = await res.json();
     stats.lbBirdiesSent = have;                           // mark these as submitted
+    stats.lbHolesSent = holesHave;                        // mark holes as submitted
     saveProgress();
     return data.board || null;
   }catch(e){ return null; }                               // server asleep/offline — try again later
@@ -5457,28 +5474,39 @@ function predictShot(power){
     const o = {x:ball.x, y:ball.y, z:0, vx:Math.cos(aimAngle)*v, vy:Math.sin(aimAngle)*v, vz:0, air:false, moving:true};
     const pts=[{x:o.x,y:o.y,z:surfaceHeightVis(o.x,o.y)}];
     let trav=0;
-    const dt=1/40;
-    /* EXACT accuracy: drive the prediction through the SAME physics the real ball uses
-       (applySlopeAndRim), including the rim/SDF pull near the hole and volcano steepness.
-       No reimplemented copy, so the yellow line cannot drift from reality on sharp breaks. */
-    for(let i=0;i<460;i++){
+    /* Use the SAME timestep the live game integrates at (1/30, the cap on the real frame dt)
+       so friction and slope accumulate identically — a 1/40 step lost speed at a different
+       rate and made the line stop short of / past the true resting spot. */
+    const dt=1/30;
+    /* Drive the preview through the EXACT real-ball surface physics, in the SAME ORDER:
+       applySlopeAndRim → recompute speed → friction (with green low-speed grip) → step → stop
+       when speed falls under 6. This mirrors the live ball frame-for-frame, so on a slope the
+       slope gravity in applySlopeAndRim keeps re-accelerating the creep (the ball trickles to
+       the true low point) and the line ends exactly where the ball comes to rest. */
+    for(let i=0;i<1200;i++){
       const sf=surfaceAt(o.x,o.y);
-      const spd=Math.hypot(o.vx,o.vy);
       if(sf==='water') break;
-      applySlopeAndRim(o, sf, spd, dt);            // ← the real putt physics
+      const speed=Math.hypot(o.vx,o.vy);
+      applySlopeAndRim(o, sf, speed, dt);          // ← the real putt physics (break + rim/SDF pull)
+      const sp2=Math.hypot(o.vx,o.vy);
       let decel=FRICTION[sf] ?? FRICTION.rough;
-      if(sf==='green' && spd<26){
+      if(CUR.fastFw && sf==='fairway') decel *= 0.62;
+      if(sf==='green' && sp2<26){
         const gg=greenGrad(o.x,o.y); const gmag=Math.hypot(gg.x,gg.y);
         const slopeHold = 1 - Math.min(0.8, gmag*2.2);
-        decel += (26-spd)*0.9*slopeHold;
+        decel += (26-sp2)*0.9*slopeHold;
       }
-      const sp2=Math.hypot(o.vx,o.vy);
       const ns=Math.max(0, sp2 - decel*dt);
       if(sp2>0){ o.vx*=ns/sp2; o.vy*=ns/sp2; }
       o.x+=o.vx*dt; o.y+=o.vy*dt; trav+=ns*dt;
       if(i%2===0) pts.push({x:o.x,y:o.y,z:surfaceHeightVis(o.x,o.y)});
-      if(ns<6) break;
+      if(dist(o.x,o.y,PIN.x,PIN.y) < (HOLE_R-BALL_R*0.45) && ns<140){
+        pts.push({x:PIN.x,y:PIN.y,z:surfaceHeightVis(PIN.x,PIN.y)}); break;
+      }
+      if(ns < 6) break;                            // same single-frame spd<6 rest as the live ball
     }
+    /* ensure the true resting spot is the final drawn point */
+    pts.push({x:o.x,y:o.y,z:surfaceHeightVis(o.x,o.y)});
     return {puttPath:pts, puttLen:trav};
   }
   const lie = surfaceAt(ball.x,ball.y);
@@ -5541,7 +5569,7 @@ function predictShot(power){
       o.x += o.vx*dt; o.y += o.vy*dt;
       if(i%2===0) rollPts.push({x:o.x,y:o.y,z:surfaceHeightVis(o.x,o.y)});
       if(dist(o.x,o.y,PIN.x,PIN.y)<(HOLE_R-BALL_R*0.45) && ns<150){ rollPts.push({x:PIN.x,y:PIN.y,z:surfaceHeightVis(PIN.x,PIN.y)}); break; }
-      if(ns<8) break;
+      if(ns<6) break;   /* single-frame spd<6 rest, matching the live ball (slope creep handled by applySlopeAndRim) */
     }
   }
   if(!landing) landing={x:o.x,y:o.y};
@@ -5556,7 +5584,66 @@ function predictShot(power){
 let clouds = [];
 for(let i=0;i<7;i++) clouds.push({a:Math.random()*Math.PI*2, h:30+Math.random()*70, s:30+Math.random()*40, d:0.6+Math.random()*0.8});
 let curNow = 0;
+/* ---- in-game MATRIX code rain (subtle overlay while matrix mode is on) ---- */
+const MATRIX_GLYPHS = 'ｱｲｳｴｵｶｷｸｹｺｻｼｽｾｿﾀﾁﾂﾃﾄﾅﾆﾇﾈ0123456789ABCDEFｦﾘﾝ$+*=<>';
+let mtxCols = null;        /* lazily-built falling columns sized to the canvas */
+let mtxLastW = 0, mtxLastH = 0;
+function initMatrixCols(W,H){
+  /* sparse: only a fraction of columns are active so it's "here and there", not a wall */
+  const colW = 22;
+  const n = Math.ceil(W/colW);
+  mtxCols = [];
+  for(let i=0;i<n;i++){
+    /* ~38% of columns ever rain; the rest stay empty for that airy, occasional look */
+    const active = Math.random() < 0.38;
+    mtxCols.push({
+      x: i*colW + colW*0.5,
+      y: Math.random()*-H,
+      speed: 70 + Math.random()*150,          /* px/sec */
+      len: 6 + (Math.random()*10|0),          /* trail length in glyphs */
+      active,
+      gap: Math.random()*2.2,                 /* seconds to wait between drops */
+      glyph: (Math.random()*MATRIX_GLYPHS.length)|0
+    });
+  }
+  mtxLastW=W; mtxLastH=H;
+}
+function drawMatrixRain(W,H,dt){
+  if(!mtxCols || mtxLastW!==W || mtxLastH!==H) initMatrixCols(W,H);
+  const step = 18;                            /* vertical glyph spacing */
+  ctx.save();
+  ctx.font = "16px 'Courier New', monospace";
+  ctx.textAlign='center';
+  for(const c of mtxCols){
+    if(!c.active){
+      /* occasionally wake an empty column so the pattern keeps shifting */
+      c.gap -= dt;
+      if(c.gap<=0 && Math.random()<0.012){ c.active=true; c.y=-step*c.len; }
+      continue;
+    }
+    c.y += c.speed*dt;
+    /* draw the trailing column: bright lead glyph, fading green tail */
+    for(let k=0;k<c.len;k++){
+      const gy = c.y - k*step;
+      if(gy < -step || gy > H+step) continue;
+      const ch = MATRIX_GLYPHS[(c.glyph + k*3 + ((curNow/90|0))) % MATRIX_GLYPHS.length];
+      if(k===0){ ctx.fillStyle='rgba(200,255,216,0.85)'; }      /* lead: bright white-green */
+      else { const a = 0.5*(1 - k/c.len); ctx.fillStyle=`rgba(30,220,90,${a})`; }
+      ctx.fillText(ch, c.x, gy);
+    }
+    /* recycle once fully past the bottom; sometimes go dormant for the sparse feel */
+    if(c.y - c.len*step > H){
+      c.y = Math.random()*-H*0.6;
+      c.speed = 70 + Math.random()*150;
+      c.len = 6 + (Math.random()*10|0);
+      c.glyph = (Math.random()*MATRIX_GLYPHS.length)|0;
+      if(Math.random()<0.45){ c.active=false; c.gap = 0.6+Math.random()*2.4; }
+    }
+  }
+  ctx.restore();
+}
 let VOLCANO = null, eruptT = 0, lastNow = 0, SCORCH = [];   /* eruption phase clock (sec into the cycle) */
+let matrixFrameDt = 0;   /* per-frame dt (s) for the in-game matrix code rain */
 function eruptPhase(){            /* 0..1 across the cycle; danger during the burst window */
   if(!VOLCANO) return {active:false, k:0};
   const period = VOLCANO.period || 6.0;
@@ -5588,6 +5675,7 @@ function shadeColor(t, lam=0){
 function draw(now){
   curNow = now;
   if(VOLCANO) eruptT += Math.min(0.05, (now-(lastNow||now))/1000);
+  matrixFrameDt = Math.min(0.05, (now-(lastNow||now))/1000);
   lastNow = now;
   ctx.clearRect(0,0,W,H);
   ctx.save();
@@ -5885,8 +5973,7 @@ function draw(now){
         const dx=p.x-fc.x, dy=p.y-fc.y, d=Math.hypot(dx,dy)||1;
         return {x:p.x+dx/d*out, y:p.y+dy/d*out};
       });
-      /* shadow halo on the void under the island */
-      { const halo=expandF(26); if(pathGround(halo)){ ctx.fillStyle='rgba(4,2,12,.55)'; ctx.fill(); } }
+      /* No flat shadow-halo on the void: the cosmic rim rings below form the floating edge. */
       /* cosmic rock rim rings stepping down into the void */
       const frings=[{out:6,col:'#2a2348'},{out:14,col:'#1d1838'},{out:22,col:'#140f28'},{out:27,col:'#3a2a66'}];
       for(let r=frings.length-1;r>=0;r--){
@@ -6352,7 +6439,9 @@ function draw(now){
       const dx=p.x-gc.x, dy=p.y-gc.y, d=Math.hypot(dx,dy)||1;
       return {x:p.x+dx/d*out, y:p.y+dy/d*out};
     });
-    { const halo=expand(70); if(pathGroundH(halo, ()=>-30)){ ctx.fillStyle='rgba(4,2,12,.6)'; ctx.fill(); } }
+    /* No flat shadow-halo here: against the dark void a fixed-height halo pokes out unevenly
+       past the tilted rim and reads as a stray dark blob. The cosmic rock rings below (which
+       ride the green's actual surface height) form the floating base on their own. */
     const rings=[
       {out:8,  col:'#1f6e54'},          /* emerald collar just off the green */
       {out:18, col:'#2a2348'},          /* cosmic rock */
@@ -7314,6 +7403,30 @@ function draw(now){
     else if(THEME()==='volcano'){ vig.addColorStop(0,'rgba(40,8,4,0)'); vig.addColorStop(1,'rgba(40,8,4,.28)'); }
     else { vig.addColorStop(0,'rgba(10,30,16,0)'); vig.addColorStop(1,'rgba(10,30,16,.17)'); }
     ctx.fillStyle=vig; ctx.fillRect(0,0,W,H);
+  }
+  /* ---- MATRIX MODE: subtle green wash + occasional code rain over the whole game view ---- */
+  if(typeof TESTING!=='undefined' && TESTING){
+    /* faint green grade so the whole scene reads "in the matrix" without hiding the game */
+    ctx.save();
+    ctx.globalCompositeOperation='multiply';
+    ctx.fillStyle='rgba(150,255,180,0.10)';
+    ctx.fillRect(0,0,W,H);
+    ctx.restore();
+    ctx.save();
+    ctx.globalCompositeOperation='screen';
+    ctx.fillStyle='rgba(0,90,30,0.10)';
+    ctx.fillRect(0,0,W,H);
+    ctx.restore();
+    /* the falling code, kept light so it's cool not annoying */
+    ctx.save();
+    ctx.globalAlpha=0.5;
+    drawMatrixRain(W,H, matrixFrameDt||0.016);
+    ctx.restore();
+    /* a couple of faint horizontal scanlines for the terminal feel */
+    ctx.save();
+    ctx.globalAlpha=0.05; ctx.fillStyle='#000';
+    for(let y=0;y<H;y+=4) ctx.fillRect(0,y,W,1);
+    ctx.restore();
   }
   ctx.restore();
   drawMinimap();
@@ -9386,6 +9499,15 @@ window.addEventListener('keydown', e=>{
   if(e.key==='c' || e.key==='C'){ greenBook=!greenBook; if(state===ST.AIM) setHint(greenBook?'Green book ON':'Green book OFF'); }
   if((e.key==='p' || e.key==='P') && state===ST.AIM) startReplay();
   if(e.key==='m' || e.key==='M'){ if(!inMenu) openInGameSettings(); }
+  if(e.key==='k' || e.key==='K'){
+    /* SKIP HOLE: matrix mode skips any hole; otherwise only holes already birdied */
+    const testSkip = (typeof TESTING!=='undefined' && TESTING);
+    const cleared = (stats.holesDone && stats.holesDone[courseIdx]) || 0;
+    if(!inMenu && !rangeMode && !practiceMode && !(MP&&MP.on)
+       && (testSkip || holeIdx < cleared) && holeIdx < CH().length-1){
+      startHole(holeIdx+1);
+    }
+  }
   if(e.key==='v' || e.key==='V'){ if(!inMenu) toggleGreenCam(); }
   if(e.key===' '){
     if(state===ST.FLY) endFlyover();
@@ -11300,12 +11422,15 @@ let lbSort = 'birdies';
 let lbData = null;
 function lbRenderMine(){
   $m('lbMyBirdies').textContent = (stats.lifetimeBirdies||0).toLocaleString();
+  { const h=$m('lbMyHoles'); if(h) h.textContent = (stats.totalHoles||0).toLocaleString(); }
   $m('lbMyBest').textContent = (stats.bestRound!=null) ? (typeof fmtScore==='function'?fmtScore(stats.bestRound):stats.bestRound) : '—';
   const nm = (lbName()||'').toLowerCase();
   let rank = '—';
   if(lbData){
     const sorted = lbData.slice().sort((a,b)=> lbSort==='birdies'
       ? (b.birdies-a.birdies)
+      : lbSort==='holes'
+      ? ((b.holes||0)-(a.holes||0))
       : ((a.bestRound||999)-(b.bestRound||999)) );
     const i = sorted.findIndex(e=> (e.name||'').toLowerCase()===nm);
     if(i>=0) rank = '#'+(i+1);
@@ -11319,12 +11444,16 @@ function lbRenderList(){
   status.style.display='none';
   const sorted = lbData.slice().sort((a,b)=> lbSort==='birdies'
     ? ((b.birdies-a.birdies) || ((a.bestRound||999)-(b.bestRound||999)))
+    : lbSort==='holes'
+    ? (((b.holes||0)-(a.holes||0)) || (b.birdies-a.birdies))
     : (((a.bestRound||999)-(b.bestRound||999)) || (b.birdies-a.birdies)) );
   const myNm = (lbName()||'').toLowerCase();
   list.innerHTML = sorted.slice(0,50).map((e,i)=>{
     const me = (e.name||'').toLowerCase()===myNm ? ' me' : '';
     const val = lbSort==='birdies'
       ? `${(e.birdies||0).toLocaleString()}<small>birdies</small>`
+      : lbSort==='holes'
+      ? `${(e.holes||0).toLocaleString()}<small>holes</small>`
       : (e.bestRound!=null ? `${typeof fmtScore==='function'?fmtScore(e.bestRound):e.bestRound}<small>best</small>` : '—');
     const nameEsc = (e.name||'Player').replace(/[<>&]/g,'');
     return `<div class="lbRow${me}"><span class="lbRank">${i+1}</span><span class="lbName">${nameEsc}</span><span class="lbVal">${val}</span></div>`;
@@ -11349,6 +11478,7 @@ $m('lbSaveName') && ($m('lbSaveName').onclick = ()=>{
   try{ SFX.click && SFX.click(); }catch(e){}
   // resubmit under the new name so the board shows it, then refresh
   stats.lbBirdiesSent = 0;   // re-send my lifetime total under the new name
+  stats.lbHolesSent = 0;     // re-send my holes total under the new name
   openLeaderboard();
 });
 $m('lbTabs') && $m('lbTabs').querySelectorAll('button').forEach(b=> b.onclick = ()=>{
