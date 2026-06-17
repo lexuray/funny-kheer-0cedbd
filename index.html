@@ -2105,21 +2105,25 @@ const ctx = cv.getContext('2d');
 const W = 960, H = 600;
 function sizeCanvas(){
   const fs = !!document.fullscreenElement;
-  /* DPR drives how many physical pixels we rasterize each frame (cost scales with DPR²). The
-     world is a fixed 960×600 that we upscale, so a slightly lower cap is visually almost
-     identical but markedly cheaper on high-density phone screens. */
-  const dpr = Math.min(window.devicePixelRatio || 1, fs ? 1.4 : 1.3);
+  /* Render resolution (DPR) is the single biggest real-device cost — work scales with the
+     SQUARE of it. The world is a fixed 960×600 we upscale, so we can render at well under the
+     device's native density and let the browser scale it up. On 'low' we go aggressive: this
+     is what makes a weak phone smooth. The slight softening is far better than stutter. */
+  const native = window.devicePixelRatio || 1;
+  let cap;
+  if(window.__lowRes)           cap = fs ? 1.0 : 0.85;   /* aggressive: ~0.85x logical pixels */
+  else                          cap = fs ? 1.4 : 1.3;    /* high: crisp */
+  const dpr = Math.min(native, cap);
   const rect = cv.getBoundingClientRect();
   const cssW = rect.width  || W;
   const cssH = rect.height || cssW * (H/W);                  /* use real rendered height */
-  const bw = Math.round(cssW*dpr), bh = Math.round(cssH*dpr);
+  const bw = Math.max(1, Math.round(cssW*dpr)), bh = Math.max(1, Math.round(cssH*dpr));
   if(cv.width!==bw || cv.height!==bh){
     cv.width = bw; cv.height = bh;
   }
   /* map logical 960x600 → full backing store; crisp + correct regardless of pixel count */
   ctx.setTransform(bw/W, 0, 0, bh/H, 0, 0);
   ctx.imageSmoothingEnabled = true;
-  /* 'high' smoothing is costly per draw and the gain is invisible at this upscale ratio */
   ctx.imageSmoothingQuality = 'low';
 }
 sizeCanvas();
@@ -4393,6 +4397,28 @@ function ac(){
 }
 const SET = { sfx:0.8, music:0.55, quality:'high' };   /* player settings */
 loadProgress();   /* restore coins/balls/scores/settings from this browser, if any */
+/* DEVICE-AWARE DEFAULT: phones and low-core machines start in LOW so the very first frames are
+   smooth, instead of stuttering until auto-quality reacts. Only applied when the player hasn't
+   explicitly chosen a quality before (stats.qualityChosen is set the moment they pick one). */
+(function(){
+  if(stats && stats.qualityChosen) return;          /* respect a manual choice */
+  let weak = false;
+  try{
+    const ua = navigator.userAgent || '';
+    const mobile = /Mobi|Android|iPhone|iPad|iPod/i.test(ua) ||
+                   (navigator.maxTouchPoints>1 && /Macintosh/.test(ua));   /* iPad poses as Mac */
+    const fewCores = (navigator.hardwareConcurrency || 8) <= 4;
+    const lowMem = (navigator.deviceMemory || 8) <= 4;
+    const hiDPR = (window.devicePixelRatio || 1) >= 2.5;   /* dense screen = lots of pixels */
+    weak = mobile || fewCores || lowMem || (hiDPR && (navigator.hardwareConcurrency||8)<=6);
+  }catch(e){}
+  if(weak) SET.quality = 'low';
+})();
+/* keep the render-resolution flag in sync with quality (sizeCanvas reads window.__lowRes,
+   which avoids touching SET before it's initialized on the very first sizing call) */
+function syncLowRes(){ window.__lowRes = (typeof SET!=='undefined' && SET && SET.quality==='low'); }
+syncLowRes();
+if(typeof sizeCanvas==='function') sizeCanvas();   /* re-apply now that quality is known */
 const AUTOQ = { avg:0, t:0, good:0, user:false };       /* adaptive-quality tracker (user:true once they pick manually) */
 function tone(freq, dur, type='sine', vol=0.18, when=0, slide=0){
   try{
@@ -6779,13 +6805,14 @@ function draw(now){
   if((isGalaxy() || isTwister()) && POLY.green && POLY.green.length>2){
     const gc={x:0,y:0}; POLY.green.forEach(p=>{gc.x+=p.x;gc.y+=p.y;});
     gc.x/=POLY.green.length; gc.y/=POLY.green.length;
-    const expand=(out)=> POLY.green.map(p=>{
-      const dx=p.x-gc.x, dy=p.y-gc.y, d=Math.hypot(dx,dy)||1;
-      return {x:p.x+dx/d*out, y:p.y+dy/d*out};
-    });
-    /* No flat shadow-halo here: against the dark void a fixed-height halo pokes out unevenly
-       past the tilted rim and reads as a stray dark blob. The rock rings below (which ride the
-       green's actual surface height) form the floating base on their own. */
+    /* LOD: the shelf is rings × green-vertices fills; decimate the outline as the green
+       shrinks on screen. 176 verts is far more than needed for a smooth rim even up close. */
+    const _scs = proj(gc.x, gc.y, surfaceHeightVis(gc.x,gc.y));
+    const _sr = _scs ? (cam.foc*90/Math.max(1,_scs.z)) : 90;
+    const _vstep = _sr>150 ? 2 : _sr>90 ? 3 : _sr>50 ? 4 : 6;
+    const GP=POLY.green, GN=GP.length;
+    const expand=(out)=>{ const r=[]; for(let i=0;i<GN;i+=_vstep){ const p=GP[i];
+      const dx=p.x-gc.x, dy=p.y-gc.y, d=Math.hypot(dx,dy)||1; r.push({x:p.x+dx/d*out, y:p.y+dy/d*out}); } return r; };
     const rings = isTwister() ? [
       {out:8,  col:'#ff4fa3'},          /* neon collar just off the green */
       {out:18, col:'#2a1858'},          /* space rock */
@@ -6812,10 +6839,11 @@ function draw(now){
     for(let r=rings.length-1; r>=0; r--){
       const outer=expand(rings[r].out);
       const inner=expand(r? rings[r-1].out : 0);
-      for(let i=0;i<POLY.green.length;i++){
-        const j=(i+1)%POLY.green.length;
+      const NL=outer.length;
+      for(let i=0;i<NL;i++){
+        const j=(i+1)%NL;
         const quad=[outer[i],outer[j],inner[j],inner[i]];
-        const fr=(frontness(POLY.green[i])+frontness(POLY.green[j]))/2;
+        const fr=(frontness(outer[i])+frontness(outer[j]))/2;
         const col = (fr>0.45 && rings[r].out<=48) ? GRASS : rings[r].col;
         fillGroundH(quad, col, surfaceHeightVis);
       }
@@ -6841,18 +6869,29 @@ function draw(now){
   if(!isVoidTheme() && !greenInWater && POLY.green && POLY.green.length>2){
     const gc={x:0,y:0}; POLY.green.forEach(p=>{gc.x+=p.x;gc.y+=p.y;});
     gc.x/=POLY.green.length; gc.y/=POLY.green.length;
-    const expand=(loop,out)=> loop.map(p=>{
-      const dx=p.x-gc.x, dy=p.y-gc.y, d=Math.hypot(dx,dy)||1;
-      return {x:p.x+dx/d*out, y:p.y+dy/d*out};
-    });
+    /* LEVEL OF DETAIL: this tessellated skirt is the single most expensive thing on screen
+       (bands × green-vertices × 2 fills). When the green is far away it's only a few pixels
+       tall, so the fine rings are invisible — we drop bands and decimate the outline as it
+       shrinks. Up close it's full detail. This is the big smoothness win and the look is
+       unchanged because the detail we drop is sub-pixel at distance. */
+    const gcs = proj(gc.x, gc.y, surfaceHeightVis(gc.x,gc.y));
+    const onScreenR = gcs ? (cam.foc * 90 / Math.max(1,gcs.z)) : 90;   // approx green radius in px
+    let bands, vstep;
+    if(onScreenR > 150)      { bands=[0,12,24,38,54,72,94,118]; vstep=2; }   // close: full bands, ~88 verts
+    else if(onScreenR > 90)  { bands=[0,18,38,62,92,118];        vstep=3; }   // mid: ~59 verts
+    else if(onScreenR > 50)  { bands=[0,30,64,108];              vstep=4; }   // far: ~44 verts
+    else                     { bands=[0,58,118];                 vstep=6; }   // tiny: ~30 verts
+    const GP = POLY.green, GN = GP.length;
+    const expand=(out)=>{ const r=[]; for(let i=0;i<GN;i+=vstep){ const p=GP[i];
+      const dx=p.x-gc.x, dy=p.y-gc.y, d=Math.hypot(dx,dy)||1; r.push({x:p.x+dx/d*out, y:p.y+dy/d*out}); } return r; };
     const baseCol = THEME()==='oak' ? '#5aa54e' : '#5fa953';   /* matches fairway grass */
-    const bands=[0,12,24,38,54,72,94,118];
     for(let bi=bands.length-1; bi>0; bi--){
-      const outer=expand(POLY.green, bands[bi]);
-      const inner=expand(POLY.green, bands[bi-1]);
+      const outer=expand(bands[bi]);
+      const inner=expand(bands[bi-1]);
       const stripe = (bi%2===0) ? 'rgba(255,255,255,.07)' : 'rgba(20,60,30,.06)';
-      for(let i=0;i<POLY.green.length;i++){
-        const j=(i+1)%POLY.green.length;
+      const NL = outer.length;
+      for(let i=0;i<NL;i++){
+        const j=(i+1)%NL;
         const quad=[outer[i],outer[j],inner[j],inner[i]];
         /* project ONCE, fill twice (base turf + mown stripe) — saves half the projection work */
         if(pathGroundH(quad, surfaceHeightVis)){
@@ -6860,9 +6899,9 @@ function draw(now){
           ctx.fillStyle=stripe;  ctx.fill();
         }
       }
-      /* hairline grain between rings, with the cut */
-      if(SET.quality==='high' && bi%2===0){
-        const ring=expand(POLY.green, bands[bi]);
+      /* hairline grain between rings, with the cut (only when reasonably large on screen) */
+      if(SET.quality==='high' && bi%2===0 && onScreenR>90){
+        const ring=expand(bands[bi]);
         const pp=ring.map(p=>proj(p.x,p.y,surfaceHeightVis(p.x,p.y))).filter(Boolean);
         if(pp.length>2){
           ctx.strokeStyle='rgba(235,250,225,.08)'; ctx.lineWidth=0.8;
@@ -6872,7 +6911,7 @@ function draw(now){
       }
     }
     /* a soft shadow where the hill meets the flat fairway, grounding the rise */
-    const foot=expand(POLY.green, 118);
+    const foot=expand(118);
     const fp=foot.map(p=>proj(p.x,p.y,0)).filter(Boolean);
     if(fp.length>2){
       ctx.save(); ctx.strokeStyle='rgba(20,50,28,.12)'; ctx.lineWidth=6;
@@ -7007,7 +7046,15 @@ function draw(now){
       });
     }
     fillGroundH(POLY.green, '#86db78', surfaceHeightVis);
-    SHADE_CELLS.forEach(c=>fillGroundH(c.pts, shadeColor(c.t, c.lam), surfaceHeightVis));
+    /* the per-cell slope shading is only readable when the green is fairly large on screen;
+       when it's far away the cells are sub-pixel, so skip them (the flat green fill above plus
+       the fall-line gradient below still convey the tilt). Big fill saving from the tee. */
+    {
+      const _gc=GREEN&&GREEN.flat?PIN:null;
+      const _cs = proj(PIN.x, PIN.y, surfaceHeightVis(PIN.x,PIN.y));
+      const _r = _cs ? (cam.foc*90/Math.max(1,_cs.z)) : 90;
+      if(_r > 60) SHADE_CELLS.forEach(c=>fillGroundH(c.pts, shadeColor(c.t, c.lam), surfaceHeightVis));
+    }
   }
   /* scorched burn patches on the green: brown/black where lava once hit (precomputed) */
   if(THEME()==='volcano'){
@@ -7021,18 +7068,25 @@ function draw(now){
       }
     }
   }
-  /* contour lines, batched into a single stroke */
-  ctx.save();
-  ctx.strokeStyle = greenBook ? 'rgba(255,255,255,.85)' : 'rgba(255,255,255,.45)';
-  ctx.lineWidth = greenBook ? 1.9 : 1.2;
-  ctx.lineCap='round';
-  ctx.beginPath();
-  for(const s of CONTOUR_SEGS){
-    const a=proj(s[0].x,s[0].y,surfaceHeightVis(s[0].x,s[0].y)), b=proj(s[1].x,s[1].y,surfaceHeightVis(s[1].x,s[1].y));
-    if(a&&b){ ctx.moveTo(a.x,a.y); ctx.lineTo(b.x,b.y); }
+  /* contour lines, batched into a single stroke — only when the green is large enough on
+     screen to read them (i.e. you're near it). Skipped at distance: invisible + 260 projects. */
+  {
+    const _ccs = proj(PIN.x, PIN.y, surfaceHeightVis(PIN.x,PIN.y));
+    const _cr = _ccs ? (cam.foc*90/Math.max(1,_ccs.z)) : 90;
+    if(_cr > 70 || greenBook){
+      ctx.save();
+      ctx.strokeStyle = greenBook ? 'rgba(255,255,255,.85)' : 'rgba(255,255,255,.45)';
+      ctx.lineWidth = greenBook ? 1.9 : 1.2;
+      ctx.lineCap='round';
+      ctx.beginPath();
+      for(const s of CONTOUR_SEGS){
+        const a=proj(s[0].x,s[0].y,surfaceHeightVis(s[0].x,s[0].y)), b=proj(s[1].x,s[1].y,surfaceHeightVis(s[1].x,s[1].y));
+        if(a&&b){ ctx.moveTo(a.x,a.y); ctx.lineTo(b.x,b.y); }
+      }
+      ctx.stroke();
+      ctx.restore();
+    }
   }
-  ctx.stroke();
-  ctx.restore();
   /* directional grass pattern: faint lines along contours already give grain;
      add animated slope arrows when toggled */
   if(showArrows){
@@ -9552,15 +9606,18 @@ function frame(now){
     const fps = dt>0 ? 1/dt : 60;
     AUTOQ.avg = AUTOQ.avg ? AUTOQ.avg*0.92 + fps*0.08 : fps;
     AUTOQ.t += dt;
-    if(AUTOQ.t > 1.4){
+    if(AUTOQ.t > 0.8){
       AUTOQ.t = 0;
       const prevQ = SET.quality;
-      if(AUTOQ.avg < 40 && SET.quality==='high'){ SET.quality='low'; }
-      else if(AUTOQ.avg > 54 && SET.quality==='low' && ++AUTOQ.good >= 3){ SET.quality='high'; AUTOQ.good=0; }
-      else if(AUTOQ.avg <= 54) AUTOQ.good=0;
+      if(AUTOQ.avg < 50 && SET.quality==='high'){ SET.quality='low'; }          /* drop sooner */
+      else if(AUTOQ.avg > 58 && SET.quality==='low' && ++AUTOQ.good >= 5){ SET.quality='high'; AUTOQ.good=0; }  /* only restore if comfortably fast for a while */
+      else if(AUTOQ.avg <= 58) AUTOQ.good=0;
       /* if quality flipped, rebuild the per-hole terrain detail so the new (coarser/finer)
          green-shade grid takes effect right away instead of only on the next hole */
-      if(SET.quality!==prevQ && typeof rebuildTerrainDetail==='function') rebuildTerrainDetail();
+      if(SET.quality!==prevQ){
+        if(typeof rebuildTerrainDetail==='function') rebuildTerrainDetail();
+        syncLowRes(); sizeCanvas();   /* low/high use different render resolutions — apply immediately */
+      }
     }
   }
   pollGamepad(dt);                              /* Xbox / gamepad input */
@@ -11919,7 +11976,7 @@ $m('lbTabs') && $m('lbTabs').querySelectorAll('button').forEach(b=> b.onclick = 
 });
 $m('sfxSlider').oninput = e=>{ SET.sfx = e.target.value/100; saveProgress(); };
 $m('musicSlider').oninput = e=>{ SET.music = e.target.value/100; if(MUSIC.gain) MUSIC.gain.gain.value = SET.music*0.4; saveProgress(); };
-$m('qualitySel').onchange = e=>{ SET.quality = e.target.value; AUTOQ.user = true; if(inMenu) initPetals(); saveProgress(); };
+$m('qualitySel').onchange = e=>{ SET.quality = e.target.value; AUTOQ.user = true; stats.qualityChosen = true; if(typeof rebuildTerrainDetail==='function') rebuildTerrainDetail(); syncLowRes(); sizeCanvas(); if(inMenu) initPetals(); saveProgress(); };
 /* reflect any restored settings in the controls */
 { const s=$m('sfxSlider');  if(s) s.value = Math.round(SET.sfx*100); }
 { const m=$m('musicSlider'); if(m) m.value = Math.round(SET.music*100); }
