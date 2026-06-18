@@ -10107,6 +10107,9 @@ function initPetals(){
 let petalRAF = null, petalLast = 0;
 function petalLoop(ts){
   if(!inMenu){ petalRAF=null; return; }
+  /* throttle to ~30fps: petals drift slowly, so half the frames look identical but cost half
+     the CPU. This is decorative background work — no reason to run it at full 60fps. */
+  if(ts - petalLast < 32){ petalRAF = requestAnimationFrame(petalLoop); return; }
   const dt = Math.min(0.05, (ts-petalLast)/1000 || 0.016); petalLast = ts;
   pctx.clearRect(0,0,petalCv.width,petalCv.height);
   for(const pt of petals){
@@ -10146,6 +10149,7 @@ function initCsPetals(){
 }
 function csPetalLoop(ts){
   if($m('courseScreen').style.display==='none'){ csRAF=null; return; }
+  if(ts - csLast < 32){ csRAF = requestAnimationFrame(csPetalLoop); return; }   /* ~30fps cap */
   const dt = Math.min(0.05, (ts-csLast)/1000 || 0.016); csLast = ts;
   cspx.clearRect(0,0,csCv.width,csCv.height);
   for(const pt of csPetalsArr){
@@ -12046,6 +12050,10 @@ window.addEventListener('resize', ()=>{ if(inMenu) initPetals(); });
 document.addEventListener('visibilitychange', ()=>{
   if(document.hidden){
     LOOP_ON = false;                  /* frame() will stop rescheduling itself */
+    /* stop the decorative petal loops too — they animate continuously on the menu and the
+       course-select screen and would otherwise keep burning frames in the background tab */
+    if(petalRAF){ cancelAnimationFrame(petalRAF); petalRAF = null; }
+    if(csRAF){ cancelAnimationFrame(csRAF); csRAF = null; }
     try{ if(typeof AC!=='undefined' && AC && AC.suspend && AC.state==='running') AC.suspend(); }catch(e){}
   } else {
     try{ if(typeof AC!=='undefined' && AC && AC.resume && AC.state==='suspended') AC.resume(); }catch(e){}
@@ -12054,6 +12062,9 @@ document.addEventListener('visibilitychange', ()=>{
       lastT = performance.now();      /* reset so the first frame's dt isn't a huge gap */
       requestAnimationFrame(frame);
     }
+    /* resume whichever decorative loop belongs to the screen we're on */
+    if(inMenu && !petalRAF){ petalLast = performance.now(); petalRAF = requestAnimationFrame(petalLoop); }
+    if($m('courseScreen') && $m('courseScreen').style.display!=='none' && !csRAF){ csLast = performance.now(); csRAF = requestAnimationFrame(csPetalLoop); }
   }
 });
 
