@@ -6831,7 +6831,7 @@ function draw(now){
        shrinks on screen. 176 verts is far more than needed for a smooth rim even up close. */
     const _scs = proj(gc.x, gc.y, surfaceHeightVis(gc.x,gc.y));
     const _sr = _scs ? (cam.foc*90/Math.max(1,_scs.z)) : 90;
-    const _vstep = _sr>150 ? 2 : _sr>90 ? 3 : _sr>50 ? 4 : 6;
+    const _vstep = _sr>120 ? 1 : _sr>70 ? 2 : 3;   /* keep close-up rim aligned with the green edge */
     const GP=POLY.green, GN=GP.length;
     const expand=(out)=>{ const r=[]; for(let i=0;i<GN;i+=_vstep){ const p=GP[i];
       const dx=p.x-gc.x, dy=p.y-gc.y, d=Math.hypot(dx,dy)||1; r.push({x:p.x+dx/d*out, y:p.y+dy/d*out}); } return r; };
@@ -7015,6 +7015,8 @@ function draw(now){
       ctx.restore();
     }
   } else if(isGalaxy()){
+    fillGroundH(POLY.fringe, '#1f8a64', surfaceHeightVis);
+    fillGroundH(POLY.green, '#2bbd86', surfaceHeightVis);     /* solid cosmic-emerald base */
     if(pathGroundH(POLY.green, surfaceHeightVis)){
       ctx.save(); ctx.clip();
       const gb=greenBBox(0), gcx=(gb.x0+gb.x1)/2, gcy=(gb.y0+gb.y1)/2;
@@ -9626,9 +9628,20 @@ function refreshPrediction(force){
 
 /* ============================ LOOP & INPUT ============================ */
 let lastT = performance.now();
+let LOOP_ON = false;   /* main loop runs only while true; cleared when the tab is hidden */
 function frame(now){
   const dt = Math.max(0, Math.min(0.033, (now-lastT)/1000));   /* clamp: never negative on a bad timestamp */
   lastT = now;
+  /* ===== IDLE GUARD =====
+     While the player is on a menu/course-select screen (not in an actual hole), there is
+     nothing for the game loop to do — the menus animate themselves (petals) on their own
+     light loops. Running full physics + draw + audio + gamepad polling here pegs a CPU core
+     for no reason, which is what was making other browser tabs (e.g. a YouTube video) stutter.
+     So when idle we skip straight to scheduling the next frame and do no work. */
+  if(inMenu){
+    if(LOOP_ON) requestAnimationFrame(frame);
+    return;
+  }
   /* ADAPTIVE QUALITY: keep the full look on capable devices, but if frames run slow for a
      sustained stretch, automatically shed the expensive extras so it stays smooth. */
   if(!AUTOQ.user){                                  /* only auto-manage if the player hasn't set it */
@@ -9773,7 +9786,7 @@ function frame(now){
 
   if(state===ST.AIM || state===ST.MOVING) updateHUD();
   draw(now);
-  requestAnimationFrame(frame);
+  if(LOOP_ON) requestAnimationFrame(frame);
 }
 
 /* ============================ XBOX / GAMEPAD SUPPORT ============================
@@ -12025,8 +12038,28 @@ $m('resetBtn').onclick = ()=>{
 };
 window.addEventListener('resize', ()=>{ if(inMenu) initPetals(); });
 
+/* ===== PAUSE WHEN TAB IS HIDDEN =====
+   If the player switches to another tab/window, there's no reason for the game to keep
+   simulating and rendering at 60fps. Doing so needlessly burns a CPU core and can make
+   whatever the player switched to — a YouTube video, another tab — stutter or buffer. So we
+   stop the loop while the tab is hidden and restart it when it returns. Audio suspends too. */
+document.addEventListener('visibilitychange', ()=>{
+  if(document.hidden){
+    LOOP_ON = false;                  /* frame() will stop rescheduling itself */
+    try{ if(typeof AC!=='undefined' && AC && AC.suspend && AC.state==='running') AC.suspend(); }catch(e){}
+  } else {
+    try{ if(typeof AC!=='undefined' && AC && AC.resume && AC.state==='suspended') AC.resume(); }catch(e){}
+    if(!LOOP_ON){                     /* restart a fresh loop */
+      LOOP_ON = true;
+      lastT = performance.now();      /* reset so the first frame's dt isn't a huge gap */
+      requestAnimationFrame(frame);
+    }
+  }
+});
+
 startHole(0, true);   /* silent pre-load so the course renders behind the menu */
 showMenu();
+LOOP_ON = true;
 requestAnimationFrame(frame);
 </script>
 </body>
